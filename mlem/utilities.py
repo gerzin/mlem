@@ -75,7 +75,7 @@ def __create_local_attack_dataset(
     Args:
         y_prob (ndarray): Prediction probability for the shadow model.
         y (ndarray): Target label predicted by the shadow model.
-        inout (str): Wether these data come from the training test ("in") or test set ("out").
+        inout (str): Whether these data come from the training test ("in") or test set ("out").
 
     Returns:
         DataFrame: Local attack dataset.
