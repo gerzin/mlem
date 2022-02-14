@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 from typing import Any, List
@@ -27,11 +28,11 @@ from mlem.attack_pipeline import perform_attack_pipeline
 
 
 def __full_attack_dataset(
-    black_box: BlackBox,
-    x_train: ndarray,
-    y_train: ndarray,
-    x_test: ndarray,
-    y_test: ndarray,
+        black_box: BlackBox,
+        x_train: ndarray,
+        y_train: ndarray,
+        x_test: ndarray,
+        y_test: ndarray,
 ) -> DataFrame:
     """Creates an attack dataset once and for all, based on the full training set.
 
@@ -57,37 +58,37 @@ def __full_attack_dataset(
 
 
 def main(
-    black_box_type: BlackBoxType,
-    black_box_path: str,
-    data_path: str,
-    results_path: str = "./results",
-    explainer_type: ExplainerType = "lime",
-    explainer_sampling: SamplingTechnique = "gaussian",
-    neighborhood_sampling: SamplingTechnique = "same",
-    num_samples: int = 5000,
-    num_shadow_models: int = 4,
-    test_size: float = 0.2,
-    random_state: int = 42,
-    n_jobs: int = -1,
+        black_box_type: BlackBoxType,
+        black_box_path: str,
+        data_path: str,
+        results_path: str = "./results",
+        explainer_type: ExplainerType = "lime",
+        explainer_sampling: SamplingTechnique = "gaussian",
+        neighborhood_sampling: SamplingTechnique = "same",
+        num_samples: int = 5000,
+        num_shadow_models: int = 4,
+        test_size: float = 0.2,
+        random_state: int = 42,
+        n_jobs: int = -1,
 ):
     """Starts a new experimental suite of MLEM.
 
-    Args:
-        black_box_type (BlackBoxType): Kind of black box to use.
-        black_box_path (str): Path of the Pickle file where to pick the black box classifier.
-        data_path (str): Path of the CSV input data.
-        results_path (str, optional): Path where to save the intermediate results. Defaults to "./results".
-        explainer_type (ExplainerType, optional): Local explainer to use. Defaults to "lime".
-        explainer_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to explain a local result. Defaults to "gaussian".
-        neighborhood_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to perform the MIA. Defaults to "same" (same dataset as before).
-        num_samples (int, optional): Number of samples for the neighborhood generation. Defaults to 5000.
-        num_shadow_models (int, optional): Number of shadow models to use in order to mimic the black box. Defaults to 4.
-        test_size (float, optional): Size of test (in proportion) to extract the data. Defaults to 0.2.
-        random_state (int, optional): Seed of random number generators. Defaults to 42.
-        n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).
+    Args:\n
+        black_box_type (BlackBoxType): Kind of black box to use.\n
+        black_box_path (str): Path of the Pickle file where to pick the black box classifier.\n
+        data_path (str): Path of the CSV input data.\n
+        results_path (str, optional): Path where to save the intermediate results. Defaults to "./results".\n
+        explainer_type (ExplainerType, optional): Local explainer to use. Defaults to "lime".\n
+        explainer_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to explain a local result. Defaults to "gaussian".\n
+        neighborhood_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to perform the MIA. Defaults to "same" (same dataset as before).\n
+        num_samples (int, optional): Number of samples for the neighborhood generation. Defaults to 5000.\n
+        num_shadow_models (int, optional): Number of shadow models to use in order to mimic the black box. Defaults to 4.\n
+        test_size (float, optional): Size of test (in proportion) to extract the data. Defaults to 0.2.\n
+        random_state (int, optional): Seed of random number generators. Defaults to 42.\n
+        n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).\n
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
-    # Black box model
+    # Load the black box model
     black_box: BlackBox = None
     if black_box_type == BlackBoxType.NN:
         net = Net()
