@@ -1,3 +1,6 @@
+"""
+This module contains wrappers for the PyTorch and SciKit-learn models, used to expose a common interface.
+"""
 from abc import ABC, abstractmethod
 from numpy import array, ndarray
 from torch import tensor, float32, no_grad, argmax
@@ -6,27 +9,30 @@ from sklearn.base import ClassifierMixin
 
 
 class BlackBox(ABC):
+    """
+    Abstract class representing the interface of a Black Box.
+    """
     @abstractmethod
     def predict(self, x: ndarray) -> ndarray:
         """Predicts an output from an unseen example.
-
-        Args:
-            x (ndarray): Input example
-
-        Returns:
-            ndarray: Predicted value
-        """
-        pass
-
-    @abstractmethod
-    def predict_proba(self, x: ndarray) -> ndarray:
-        """Prediction probability from an unseen example.
 
         Args:
             x (ndarray): Input example.
 
         Returns:
             ndarray: Predicted value.
+        """
+        pass
+
+    @abstractmethod
+    def predict_proba(self, x: ndarray) -> ndarray:
+        """Return the prediction probability vector from an unseen example.
+
+        Args:
+            x (ndarray): Input example.
+
+        Returns:
+            ndarray: Probability vector.
         """
         pass
 
