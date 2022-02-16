@@ -20,6 +20,8 @@ from mlem.utilities import (
     save_txt,
 )
 
+import logging
+logger = logging.getLogger(__name__)
 
 class ShadowModel(ABC):
 
@@ -115,8 +117,19 @@ class ShadowModelsManager:
         y = concatenate((y_maj, y_min))
         return x, y
 
+    def get_attack_dataset(self) -> DataFrame:
+        """
+        Get the dataset for the M.I. Attack Model.
+
+        Notes:
+            The attack dataset is initialized at the end of self.fit so this function should not be called before.
+        Returns:
+            DataFrame containing records of the form (probab. vector, true label, in/out)
+        """
+        return self.attack_dataset
+
     def fit(self, x: ndarray, y: ndarray) -> None:
-        """Fit a number of shadow models and tests them.
+        """Fits a number of shadow models, tests them and initializes self.attack_dataset.
 
         This method creates n shadow models.
 
@@ -157,7 +170,7 @@ class ShadowModelsManager:
             # Saves the reports
             save_txt(f"{path}/report_train.txt", report_train)
             save_txt(f"{path}/report_test.txt", report_test)
-            # Creates the dataset for the attack model
+            # Creates the dataset for the attack model (prob, label, in/out)
             attack_dataset_i: DataFrame = create_attack_dataset(
                 y_prob_train, y_train, y_prob_test, y_test
             )
