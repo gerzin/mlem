@@ -3,6 +3,7 @@ This module contains PyTorch Dataset for the geolocation30 dataset.
 """
 import torch
 import pandas as pd
+import numpy as np
 from torch.utils.data import Dataset
 
 
@@ -38,7 +39,7 @@ class Geotarget30(Dataset):
             index = index.tolist()
 
         # get the right columns
-        features = self.geolocation.iloc[index, 2:-1].to_numpy()
+        features = self.geolocation.iloc[index, 2:-1].to_numpy(dtype=np.float32)
         # get the target variable
         targ = self.geolocation.iloc[index, -1]
 
