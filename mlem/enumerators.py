@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class BlackBoxType(Enum):
     """Kind of black box to use."""
 
