@@ -1,7 +1,7 @@
 import bz2
 import pickle
-from typing import Any, Dict, List
-
+from typing import Any, Dict, List, Tuple
+import numpy as np
 from numpy import ndarray
 from pandas import concat
 from pandas.core.frame import DataFrame
@@ -32,6 +32,46 @@ def save_txt(path: str, txt: str):
         f.write(txt)
 
 
+def save_train_test_datasets(path: str, x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray) -> None:
+    """
+    Saves on a compressed file the training and test sets with the respective labels.
+    Args:
+        path:
+        x_train: training features.
+        y_train: training targets.
+        x_test: test features.
+        y_test: test targets.
+
+    Returns:
+        None
+    """
+    np.savez_compressed(
+        path,
+        x_train=x_train,
+        y_train=y_train,
+        x_test=x_test,
+        y_test=y_test,
+    )
+
+
+def load_train_test_datasets(path: str) -> Tuple[ndarray, ndarray, ndarray, ndarray]:
+    """
+    Loads training and test sets, with the respective labels, saved with save_train_test_datasets.
+    Args:
+        path: path of the file containing the datasets.
+
+    Returns:
+        (x_train: ndarray, y_train: ndarray, x_test: ndarray, y_test: ndarray) - training features, training targets, test features, test targets
+    """
+    loaded = np.load(path, allow_pickle=True)
+    x_train: ndarray = loaded["x_train"]
+    y_train: ndarray = loaded["y_train"]
+    x_test: ndarray = loaded["x_test"]
+    y_test: ndarray = loaded["y_test"]
+
+    return x_train, y_train, x_test, y_test
+
+
 # Hyperparameters of the grid search
 __HYPERPARAMETERS = {
     "bootstrap": [True, False],
@@ -45,9 +85,9 @@ __HYPERPARAMETERS = {
 
 
 def create_random_forest(
-    x_train: ndarray,
-    y_train: ndarray,
-    hyperparameters: Dict[str, List[Any]] = __HYPERPARAMETERS,
+        x_train: ndarray,
+        y_train: ndarray,
+        hyperparameters: Dict[str, List[Any]] = __HYPERPARAMETERS,
 ) -> RandomForestClassifier:
     """Creates a random forest classifier via grid search.
 
@@ -66,9 +106,9 @@ def create_random_forest(
 
 
 def __create_local_attack_dataset(
-    y_prob: ndarray,
-    y: ndarray,
-    inout: str,
+        y_prob: ndarray,
+        y: ndarray,
+        inout: str,
 ) -> DataFrame:
     """Creates a dataframe of the form (y_prob, y, "in" / "out") to be used for
     the creation of a dataset for the Attack Model of the Membership Inference.
@@ -88,10 +128,10 @@ def __create_local_attack_dataset(
 
 
 def create_attack_dataset(
-    y_prob_train: ndarray,
-    y_train: ndarray,
-    y_prob_test: ndarray = None,
-    y_test: ndarray = None,
+        y_prob_train: ndarray,
+        y_train: ndarray,
+        y_prob_test: ndarray = None,
+        y_test: ndarray = None,
 ) -> DataFrame:
     """Creates a dataset for the Membership Inference Attack Model.
 
