@@ -70,7 +70,8 @@ def __create_local_attack_dataset(
     y: ndarray,
     inout: str,
 ) -> DataFrame:
-    """Creates a local attack dataset
+    """Creates a dataframe of the form (y_prob, y, "in" / "out") to be used for
+    the creation of a dataset for the Attack Model of the Membership Inference.
 
     Args:
         y_prob (ndarray): Prediction probability for the shadow model.
@@ -92,12 +93,17 @@ def create_attack_dataset(
     y_prob_test: ndarray = None,
     y_test: ndarray = None,
 ) -> DataFrame:
-    """Creates an attack dataset by concatenating the data.
+    """Creates a dataset for the Membership Inference Attack Model.
+
+
+    Creates an attack dataset by creating tuples of the form (y_prob_train, y_train, "in") for the
+    data belonging to the train set of the model we are trying to attack and (y_prob_test, y_test, "out")
+    for the data in the test set of that model.
 
     Args:
         y_prob_train (ndarray): Predicted probabilities on the training set.
         y_train (ndarray): Labels of the training set.
-        y_prob_test (ndarray, optional): Predicted probabiities on the test set.
+        y_prob_test (ndarray, optional): Predicted probabilities on the test set.
         y_test (ndarray, optional): Labels of the test set.
 
     Returns:

@@ -1,4 +1,5 @@
 import os
+from abc import ABC, abstractmethod
 from typing import List, Tuple
 from numpy import concatenate, ndarray, savez_compressed
 from numpy.core.fromnumeric import argmin
@@ -12,7 +13,6 @@ from sklearn.metrics import classification_report
 from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 
-
 from mlem.utilities import (
     create_attack_dataset,
     create_random_forest,
@@ -21,11 +21,53 @@ from mlem.utilities import (
 )
 
 
+class ShadowModel(ABC):
+
+    @abstractmethod
+    def fit(self, x: ndarray, y: ndarray) -> None:
+        """
+        Fit the model on some data
+        Args:
+            x: features
+            y: targets
+
+        Returns:
+            None
+        """
+        pass
+
+    @abstractmethod
+    def predict(self, x: ndarray) -> ndarray:
+        """Predicts an output from an unseen example.
+
+        Args:
+            x (ndarray): Input example
+
+        Returns:
+            ndarray: Predicted value
+        """
+        pass
+
+    @abstractmethod
+    def predict_proba(self, x: ndarray) -> ndarray:
+        """Prediction probability from an unseen example.
+
+        Args:
+            x (ndarray): Input example.
+
+        Returns:
+            ndarray: Predicted value.
+        """
+        pass
+
+
+# TODO this class is using random forests as shadow model.
+#      Should probably pass the model to use as argument or at least as option.
 class ShadowModelsManager:
-    """Class that creates and mantains the shadow models."""
+    """Class that creates n ShadowModels, trains them and maintains them."""
 
     def __init__(
-        self, n_models: int, results_path: str, test_size: float, random_state: int
+            self, n_models: int, results_path: str, test_size: float, random_state: int
     ) -> None:
         """Creates a new Shadow Models Manager.
 
@@ -35,6 +77,7 @@ class ShadowModelsManager:
             test_size (float): Size of the test for the splitting.
             random_state (int): Seed of random number generators.
         """
+
         self.__n_models = n_models
         self.results_path = results_path
         self.test_size = test_size
@@ -42,7 +85,10 @@ class ShadowModelsManager:
         os.makedirs(results_path, exist_ok=True)
         # SMOTE oversampler
         self.smote = SMOTE(random_state=random_state)
-    
+        self.attack_dataset = None  # set in self.fit
+
+    # TODO this method isn't calling self. Should probably move it under utilities
+    #      also, consider using numba to improve speed
     def __minority_class_resample(self, x: ndarray, y: ndarray, n_samples: int = 50) -> Tuple[ndarray, ndarray]:
         """Resamples x and y generating n_samples elements of the minority class.
 
@@ -55,9 +101,9 @@ class ShadowModelsManager:
             Tuple[ndarray, ndarray]: Resampled x and y.
         """
         # Unique classes and their frequencies
-        classes, occurrencies = unique(y, return_counts=True)
+        classes, occurrences = unique(y, return_counts=True)
         # Minority class
-        min_class: int = classes[argmin(occurrencies)]
+        min_class: int = classes[argmin(occurrences)]
         # Records of every other class
         x_maj, y_maj = x[y != min_class], y[y != min_class]
         # Records of the minority class
@@ -69,9 +115,10 @@ class ShadowModelsManager:
         y = concatenate((y_maj, y_min))
         return x, y
 
-
     def fit(self, x: ndarray, y: ndarray) -> None:
         """Fit a number of shadow models and tests them.
+
+        This method creates n shadow models.
 
         Args:
             x (ndarray): Input examples.
@@ -91,13 +138,18 @@ class ShadowModelsManager:
             # Random Forest obtained via grid search
             rf: RandomForestClassifier = create_random_forest(x_train, y_train)
             # Prediction of the shadow model
+            # TODO performance optimization: first predict proba and then assign argmax to y_pred_train and test
             y_pred_train: ndarray = rf.predict(x_train)
             y_prob_train: ndarray = rf.predict_proba(x_train)
+
             y_pred_test: ndarray = rf.predict(x_test)
             y_prob_test: ndarray = rf.predict_proba(x_test)
+
             # Classification reports
             report_train: str = classification_report(y_train, y_pred_train)
             report_test: str = classification_report(y_test, y_pred_test)
+
+            # TODO this part should not be in the fit method of the SM, but should be done by the caller
             # Path of the shadow model
             path: str = f"{self.results_path}/{i}"
             # Creates the directory if it does not exists
