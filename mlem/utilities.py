@@ -1,6 +1,6 @@
 import bz2
 import pickle
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union, Iterable
 import numpy as np
 from numpy import ndarray
 from pandas import concat
@@ -154,3 +154,25 @@ def create_attack_dataset(
         df_out: DataFrame = __create_local_attack_dataset(y_prob_test, y_test, "out")
         return concat([df_in, df_out])
     return df_in
+
+
+def get_frequencies(values: Union[Iterable, int, float]) -> np.array:
+    """
+    Given a set of values return an array containing the unique values and their respective frequencies.
+
+    >>> a = np.array([1 1 1 2 2 2 3 4 4 5 4 5])
+    >>> print(get_frequencies(a))
+    >>> array([[1, 3],
+    >>>       [2, 3],
+    >>>       [3, 1],
+    >>>       [4, 3],
+    >>>       [5, 2]])
+
+    Args:
+        values: array or list from which to extract the unique values and their frequencies
+    Returns:
+        array - array of [unique value, its frequency] pairs
+    """
+    # unique, counts
+    u, c = np.unique(values, return_counts=True)
+    return np.asarray((u, c)).T
