@@ -22,6 +22,6 @@ scipy==1.7.2
 six==1.16.0
 threadpoolctl==3.0.0
 tomli==1.2.2
-torch==1.10.0
+torch==1.10.2
 typer==0.4.0
 typing-extensions==3.10.0.2
