@@ -1,6 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from typing import List, Tuple
+import numpy as np
 from numpy import concatenate, ndarray, savez_compressed
 from numpy.core.fromnumeric import argmin
 from numpy.core.shape_base import vstack
@@ -17,11 +18,12 @@ from mlem.utilities import (
     create_attack_dataset,
     create_random_forest,
     save_pickle,
-    save_txt,
+    save_txt, get_frequencies,
 )
 
 import logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 class ShadowModel(ABC):
 
@@ -85,12 +87,16 @@ class ShadowModelsManager:
         self.test_size = test_size
         # Creates the results path if it does not exists
         os.makedirs(results_path, exist_ok=True)
+        logger.debug(f"CREATED: {results_path}")
+
         # SMOTE oversampler
-        self.smote = SMOTE(random_state=random_state)
+        self.oversampler = SMOTE(random_state=random_state)
+
         self.attack_dataset = None  # set in self.fit
 
     # TODO this method isn't calling self. Should probably move it under utilities
     #      also, consider using numba to improve speed
+    #      Question: why are we doing this? Wouldn't smote suffice?
     def __minority_class_resample(self, x: ndarray, y: ndarray, n_samples: int = 50) -> Tuple[ndarray, ndarray]:
         """Resamples x and y generating n_samples elements of the minority class.
 
@@ -131,27 +137,39 @@ class ShadowModelsManager:
     def fit(self, x: ndarray, y: ndarray) -> None:
         """Fits a number of shadow models, tests them and initializes self.attack_dataset.
 
-        This method creates n shadow models.
+        This method creates n shadow models and saves them and their input data
 
         Args:
             x (ndarray): Input examples.
             y (ndarray): Target values.
         """
-        # List of attack datasets to be concatenated
+        # List of attack datasets to be concatenated at the end of this loop
         attack_datasets: List[DataFrame] = []
+
         for i in range(self.__n_models):
             # Train-test splitting
             x_train, x_test, y_train, y_test = train_test_split(
                 x, y, test_size=self.test_size
             )
             # Oversampling of the minority class
+
+            # TODO tutta questa parte di deve aggiustare
+
             x_train, y_train = self.__minority_class_resample(x_train, y_train)
+            for _ in range(10):
+                x_train, y_train = self.__minority_class_resample(x_train, y_train, 10)
+
+
+            logger.debug("SMOTE oversampling")
             # SMOTE oversampling
-            x_train, y_train = self.smote.fit_resample(x_train, y_train)
+            x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
+
+            logger.debug("Creating random forest")
             # Random Forest obtained via grid search
             rf: RandomForestClassifier = create_random_forest(x_train, y_train)
             # Prediction of the shadow model
-            # TODO performance optimization: first predict proba and then assign argmax to y_pred_train and test
+
+            # TODO performance optimization: first predict proba and then assign argmax or something else to y_pred_train and test
             y_pred_train: ndarray = rf.predict(x_train)
             y_prob_train: ndarray = rf.predict_proba(x_train)
 
@@ -186,5 +204,6 @@ class ShadowModelsManager:
             )
             # Saves the shadow model
             save_pickle(f"{path}/model.pkl.bz2", rf)
+            logger.debug("Saved shadow model")
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)
