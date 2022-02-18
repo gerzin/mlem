@@ -4,7 +4,7 @@ from torch.nn.init import xavier_normal_
 from torch.nn.functional import softmax
 
 
-class GeotargetLinear(Module):
+class Linear(Module):
     """
     Linear model for predicting the classes of the geotarget_30 dataset.
 
