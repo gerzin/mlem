@@ -38,7 +38,8 @@ def __full_attack_dataset(
         x_test: ndarray,
         y_test: ndarray,
 ) -> DataFrame:
-    """Creates an attack dataset using the black box and its train and test set.
+    """Creates an attack dataset (y_prob, y, in/out) using the black box and its train and test set.
+
 
     Args:
         black_box (BlackBox): Black box used to perform the prediction.
@@ -94,15 +95,12 @@ def main(
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
 
     loaded = torch.load(black_box_path)
-    echo("loaded")
     net = LinearDropLinear()
-    echo("create linear")
     net.load_state_dict(loaded['model_state_dict'])
-    echo("load dict")
-    black_box = PyTorchBlackBox(net)
-    echo("Created wrapper")
 
-    echo("Black box model correctly read")
+    black_box = PyTorchBlackBox(net)
+    echo("Black box model correctly read and wrapped")
+
     # Set the sampling method.
     if explainer_sampling == SamplingTechnique.SAME:
         echo("Sampling of the explainer has to be either 'gaussian' or 'lhs'", err=True)
