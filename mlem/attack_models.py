@@ -1,3 +1,7 @@
+"""
+This module contains a class which given a dataset of (pred. vectors, true labels, in/out) records,
+creates, trains and evaluates, #true labels Attack Models. Each Attack Model is a RandomForest.
+"""
 import os
 from typing import Dict, List, Tuple
 from numpy import concatenate, ndarray
@@ -31,23 +35,26 @@ class AttackModelsManager:
         Contextually it performs the test_single.
 
         Args:
-            attack_dataset (DataFrame): Attack dataset created by the shadow models.
+            attack_dataset (DataFrame): Attack dataset of the form (prob, label, "in"/"out") created by the shadow models.
         """
+        # TODO should find a way to parallelize this loop
+
+        # for each label (true class) get the respective dataset
         for label, df in attack_dataset.groupby("label", sort=False):
             # Input data
             x: ndarray = df.drop(columns=["label", "inout"]).values
             y: ndarray = df["inout"].values
             # Path of the current attack model
-            path: str = f"{self.results_path}/{label}"
-            # Creates the path if it does not exists
-            os.makedirs(path, exist_ok=True)
+            path_label_attack: str = f"{self.results_path}/{label}"
+            # Creates the path if it does not exist
+            os.makedirs(path_label_attack, exist_ok=True)
             # Splits the dataset into train and test
             x_train, x_test, y_train, y_test = train_test_split(
                 x, y, random_state=self.random_state
             )
             # Saves the input data
             savez_compressed(
-                f"{path}/data",
+                f"{path_label_attack}/data",
                 x_train=x_train,
                 x_test=x_test,
                 y_train=y_train,
@@ -56,7 +63,7 @@ class AttackModelsManager:
             # Attack model used to fit data
             attack_model: ClassifierMixin = create_random_forest(x_train, y_train)
             # Saves the attack model
-            save_pickle(f"{path}/model.pkl.bz2", attack_model)
+            save_pickle(f"{path_label_attack}/model.pkl.bz2", attack_model)
             # Prediction of the model based on data
             y_pred_train: ndarray = attack_model.predict(x_train)
             y_pred_test: ndarray = attack_model.predict(x_test)
@@ -64,8 +71,8 @@ class AttackModelsManager:
             report_train: str = classification_report(y_train, y_pred_train)
             report_test: str = classification_report(y_test, y_pred_test)
             # Saves the report
-            save_txt(f"{path}/report_train.txt", report_train)
-            save_txt(f"{path}/report_test.txt", report_test)
+            save_txt(f"{path_label_attack}/report_train.txt", report_train)
+            save_txt(f"{path_label_attack}/report_test.txt", report_test)
             # Saves the model
             self.attack_models[label] = attack_model
 
@@ -74,7 +81,7 @@ class AttackModelsManager:
 
         Args:
             x (ndarray): Input data.
-            label (int): Label corresponding
+            label (int): Corresponding label.
 
         Returns:
             ndarray: Output value.
@@ -83,6 +90,10 @@ class AttackModelsManager:
 
     def __test_single(self, data: DataFrame, name: str) -> None:
         """Tests each attack model separately and then concatenates the result.
+
+         It uses
+        Notes:
+            This method creates files with the classification_report.
 
         Args:
             data (DataFrame): Data with prediction probability, label and "inout" label.
@@ -96,7 +107,7 @@ class AttackModelsManager:
         for label, label_df in data.groupby("label", sort=False):
             # Path of the current attack model
             path: str = f"{self.results_path}/{label}"
-            # Appropriate model
+            # Get the model for the specific label
             model: ClassifierMixin = self.attack_models[label]
             # Input data
             x: ndarray = label_df.drop(columns=["label", "inout"]).values
@@ -104,19 +115,19 @@ class AttackModelsManager:
             y_true: ndarray = label_df["inout"].values
             # Prediction of the model
             y_pred: ndarray = model.predict(x)
-            # Classification report
+            # create the Classification report and save it on a file.
             report: str = classification_report(y_true, y_pred)
             save_txt(f"{path}/test_single_{name}.txt", report)
             # Updates the list
             y_true_list.append(y_true)
             y_pred_list.append(y_pred)
-        # Concatenates the predictions to get an overall report
+        # Concatenates the predictions to get an overall report and save it on a file.
         y_true: ndarray = concatenate(y_true_list)
         y_pred: ndarray = concatenate(y_pred_list)
         report: str = classification_report(y_true, y_pred)
         save_txt(f"{self.results_path}/test_single_concat_{name}.txt", report)
 
-    def __test_all(self, data: DataFrame, name: str):
+    def __test_all(self, data: DataFrame, name: str): # TODO scrivere che test fa ed effetti collaterali (crea dei file)
         """Tests each attack model on the full attack dataset.
 
         Args:
