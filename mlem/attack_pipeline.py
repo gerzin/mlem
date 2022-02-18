@@ -1,3 +1,6 @@
+"""
+This module contains the pipeline used to perform an attack on a model.
+"""
 import os
 from typing import Any, List, Sequence, Tuple
 from numpy import ndarray, delete
@@ -11,6 +14,9 @@ from mlem.black_box import BlackBox
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle, save_txt
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def __generate_neighborhood(
     instance: ndarray,
@@ -18,12 +24,23 @@ def __generate_neighborhood(
     num_samples: int,
     sampling_method: SamplingTechnique,
 ) -> ndarray:
+    """
+
+    Args:
+        instance:
+        explainer:
+        num_samples:
+        sampling_method:
+
+    Returns:
+
+    """
     # Generates the neighborhood
     _, neighborhood = explainer.data_inverse(
         instance, num_samples, sampling_method.value
     )
     # Deletes the first row
-    neighborhood = delete(neighborhood, (0), axis=0)
+    neighborhood = delete(neighborhood, 0, axis=0)
     return neighborhood
 
 
@@ -36,6 +53,20 @@ def __get_local_data(
     num_samples: int,
     labels: Sequence[Any],
 ) -> Tuple[EnsembleClassifier, ndarray, ndarray]:
+    """
+
+    Args:
+        x:
+        y:
+        exp:
+        black_box:
+        sampling_method:
+        num_samples:
+        labels:
+
+    Returns:
+
+    """
     # Exploits Lime to get the neighborhood and the local model
     _, models, x_neigh = exp.explain_instance(
         x,
@@ -68,6 +99,27 @@ def perform_attack_pipeline(
     test_size: float,
     random_state: int,
 ):
+    """
+    Performs
+    Args:
+        id: id of what
+        x:
+        y:
+        labels:
+        black_box:
+        results_path:
+        explainer:
+        explainer_sampling:
+        neighborhood_sampling:
+        attack_full:
+        num_samples:
+        num_shadow_models:
+        test_size:
+        random_state:
+
+    Returns:
+
+    """
     # Creates a local explainer with a neighborhood
     local_model, x_neigh, y_neigh = __get_local_data(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
@@ -97,6 +149,7 @@ def perform_attack_pipeline(
     save_pickle(f"{black_box_path}/model.pkl.bz2", local_model)
     # Saves the neighborhood-generated data on disk
     savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
+
     # Creates a number of shadow models to imitate the local model
     shadow_models = ShadowModelsManager(
         n_models=num_shadow_models,
@@ -106,12 +159,15 @@ def perform_attack_pipeline(
     )
     # Fits the shadow models to imitate the black boxes.
     shadow_models.fit(x_attack, y_attack)
+
     # Extracts the attack dataset of the shadow model for the attack models
-    attack_dataset: DataFrame = shadow_models.attack_dataset
+    attack_dataset: DataFrame = shadow_models.get_attack_dataset()
+
     # Creates a number of attack models that infer the relation between probability and belonging
     attack_models = AttackModelsManager(
         results_path=f"{path}/attack", random_state=random_state
     )
+
     # Fits the attack models
     attack_models.fit(attack_dataset)
     # Checks if the record (in the training set) is recognized as "in"
