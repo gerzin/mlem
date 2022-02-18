@@ -6,6 +6,7 @@ from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
 from pandas.core.frame import DataFrame
 
+from blackboxes.pytorch.linear import LinearDropLinear
 from mlem.utilities import create_attack_dataset
 
 # Adds LIME to the system
@@ -20,13 +21,13 @@ from typer import echo, run
 from lime.lime_tabular import LimeTabularExplainer
 
 from mlem.black_box import BlackBox, PyTorchBlackBox, SklearnBlackBox
-from mlem.neural_black_box import Net
 
 from joblib import Parallel, delayed, cpu_count
 
 from mlem.attack_pipeline import perform_attack_pipeline
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -37,7 +38,7 @@ def __full_attack_dataset(
         x_test: ndarray,
         y_test: ndarray,
 ) -> DataFrame:
-    """Creates an attack dataset once and for all, based on the full training set. # TODO what does it mean?
+    """Creates an attack dataset using the black box and its train and test set.
 
     Args:
         black_box (BlackBox): Black box used to perform the prediction.
@@ -59,14 +60,13 @@ def __full_attack_dataset(
     )
     return attack
 
+
 def parse_arguments():
     pass
 
 
 def main(
-        black_box_type: BlackBoxType,
         black_box_path: str,
-        data_path: str,
         results_path: str = "./results",
         explainer_type: ExplainerType = "lime",
         explainer_sampling: SamplingTechnique = "gaussian",
@@ -77,12 +77,10 @@ def main(
         random_state: int = 42,
         n_jobs: int = -1,
 ):
-    """Starts a new experimental suite of MLEM.
+    """Starts a new experimental suite of MLEM with a PyTorch black box.
 
     Args:\n
-        black_box_type (BlackBoxType): Kind of black box to use.\n
-        black_box_path (str): Path of the Pickle file where to pick the black box classifier.\n
-        data_path (str): Path of the CSV input data.\n # TODO CSV??? or npz with (X_train, X_test, y_train, y_test)
+        black_box_path (str): Path of the file saved with torch.save() where to pick the black box classifier (must contain 'model_state_dict', 'x_train', 'y_train', 'x_test', 'y_test').\n
         results_path (str, optional): Path where to save the intermediate results. Defaults to "./results".\n
         explainer_type (ExplainerType, optional): Local explainer to use. Defaults to "lime".\n
         explainer_sampling (SamplingTechnique, optional): Type of sampling performed by the local Explainer to explain a local result. Defaults to "gaussian".\n
@@ -95,27 +93,20 @@ def main(
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
 
+    loaded = torch.load(black_box_path)
+    echo("loaded")
+    net = LinearDropLinear()
+    echo("create linear")
+    net.load_state_dict(loaded['model_state_dict'])
+    echo("load dict")
+    black_box = PyTorchBlackBox(net)
+    echo("Created wrapper")
 
-    # Load the black box model
-    black_box: BlackBox = None
-    loaded = None
-    if black_box_type == BlackBoxType.NN:
-        loaded = torch.load(black_box_path)
-        net = Net()
-        net.load_state_dict(loaded['model_state_dict'])
-        black_box = PyTorchBlackBox(net)
-    elif black_box_type == BlackBoxType.RF:
-        model = read_pickle(black_box_path)
-        black_box = SklearnBlackBox(model)
-    else:
-        echo("Not a valid black box", err=True)
-        exit(1)
     echo("Black box model correctly read")
     # Set the sampling method.
     if explainer_sampling == SamplingTechnique.SAME:
         echo("Sampling of the explainer has to be either 'gaussian' or 'lhs'", err=True)
         exit(1)
-    # Load the input dataset TODO change the way the dataset is loaded. Allow to pass csv.
 
     x_train: ndarray = loaded["x_train"]
     y_train: ndarray = loaded["y_train"]
@@ -130,6 +121,8 @@ def main(
     attack_full: DataFrame = __full_attack_dataset(
         black_box, x_train, y_train, x_test, y_test
     )
+
+    echo("Attack dataset created")
 
     # Creates the result folder if it does not exist
     os.makedirs(results_path, exist_ok=True)
@@ -181,4 +174,6 @@ def main(
 
 
 if __name__ == "__main__":
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    echo(f"Using {device=}")
     run(main)
