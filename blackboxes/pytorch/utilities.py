@@ -65,6 +65,3 @@ def train(model: Module, optimizer: Optimizer, loss_fn: Callable, train_loader: 
                                                                                              test_loss,
                                                                                              num_correct / num_examples))
 
-
-def save_net(net, path):
-    pass
