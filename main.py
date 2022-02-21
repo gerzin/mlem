@@ -76,11 +76,11 @@ def main(
     Args:\n
         black_box_type (BlackBoxType): Kind of black box to use.\n
         black_box_path (str): Path of the Pickle file where to pick the black box classifier.\n
-        data_path (str): Path of the CSV input data.\n
+        data_path (str): Path of the CSV input data.\n # TODO CSV??? or npz with (X_train, X_test, y_train, y_test)
         results_path (str, optional): Path where to save the intermediate results. Defaults to "./results".\n
         explainer_type (ExplainerType, optional): Local explainer to use. Defaults to "lime".\n
-        explainer_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to explain a local result. Defaults to "gaussian".\n
-        neighborhood_sampling (SamplingTechnique, optional): Type of sampling performed by the local explanator to perform the MIA. Defaults to "same" (same dataset as before).\n
+        explainer_sampling (SamplingTechnique, optional): Type of sampling performed by the local Explainer to explain a local result. Defaults to "gaussian".\n
+        neighborhood_sampling (SamplingTechnique, optional): Type of sampling performed by the local Explainer to perform the MIA. Defaults to "same" (same dataset as before).\n
         num_samples (int, optional): Number of samples for the neighborhood generation. Defaults to 5000.\n
         num_shadow_models (int, optional): Number of shadow models to use in order to mimic the black box. Defaults to 4.\n
         test_size (float, optional): Size of test (in proportion) to extract the data. Defaults to 0.2.\n
@@ -88,11 +88,12 @@ def main(
         n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).\n
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
+
     # Load the black box model
     black_box: BlackBox = None
     if black_box_type == BlackBoxType.NN:
         net = Net()
-        net.load_state_dict(torch.load(black_box_path))
+        net.load_state_dict(torch.load(black_box_path))  # TODO check
         black_box = PyTorchBlackBox(net)
     elif black_box_type == BlackBoxType.RF:
         model = read_pickle(black_box_path)
@@ -101,10 +102,11 @@ def main(
         echo("Not a valid black box", err=True)
         exit(1)
     echo("Black box model correctly read")
+    # Set the sampling method.
     if explainer_sampling == SamplingTechnique.SAME:
         echo("Sampling of the explainer has to be either 'gaussian' or 'lhs'", err=True)
         exit(1)
-    # Input dataset
+    # Load the input dataset TODO change the way the dataset is loaded. Allow to pass csv.
     loaded = load(data_path, allow_pickle=True)
     x_train: ndarray = loaded["X_train"]
     y_train: ndarray = loaded["y_train"]
@@ -114,13 +116,16 @@ def main(
     labels: List[Any] = unique(concatenate([y_train, y_test])).tolist()
     # Target labels
     echo("Input data correctly read from disk")
+
     # Attack dataset used in the audit
     attack_full: DataFrame = __full_attack_dataset(
         black_box, x_train, y_train, x_test, y_test
     )
-    # Creates the result folder if it does not exists
+
+    # Creates the result folder if it does not exist
     os.makedirs(results_path, exist_ok=True)
     echo("Output folder correctly created")
+
     # Local explainer
     explainer = None
     if explainer_type == ExplainerType.LIME:
@@ -129,17 +134,20 @@ def main(
         echo("Not a valid local explainer.", err=True)
         exit(1)
     echo("Explainer correctly created")
+
     # Specific path for this experimental setting
     path: str = (
         f"{results_path}/{explainer_sampling.value}/{neighborhood_sampling.value}"
     )
-    # Creates the path if it does not exists
+    # Creates the path if it does not exist
     os.makedirs(path, exist_ok=True)
     echo(f"Results are going to be saved in {path}")
-    # Indices of the rows
+
+    # Indices of the rows of the train dataset
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
+
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
         parallel(
