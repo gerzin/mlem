@@ -7,8 +7,8 @@ from torch.nn.functional import softmax
 class Net(Module):
     def __init__(self):
         super().__init__()
-        ### FOR XAVIER INITIALIZATION
-        self.fc1 = Linear(236, 128)  # fc stays for 'fully connected'
+        # for xavier initialization
+        self.fc1 = Linear(236, 128)
         xavier_normal_(self.fc1.weight)
         self.drop = Dropout(0.3)
         self.fc4 = Linear(128, 30)
@@ -19,3 +19,4 @@ class Net(Module):
         x = tanh(self.fc1(x))
         x = self.fc4(self.drop(x))
         return softmax(x, dim=1)
+
