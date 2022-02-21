@@ -1,5 +1,8 @@
 """
 This module contains PyTorch Dataset for the geolocation30 dataset.
+
+This class should be used to load the geotarget_30.csv dataset (or its train and test splits) in order to use it with
+PyTorch.
 """
 import torch
 import pandas as pd
