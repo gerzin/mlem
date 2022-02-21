@@ -88,6 +88,7 @@ def create_random_forest(
         x_train: ndarray,
         y_train: ndarray,
         hyperparameters: Dict[str, List[Any]] = __HYPERPARAMETERS,
+        n_jobs = 4
 ) -> RandomForestClassifier:
     """Creates a random forest classifier via grid search.
 
@@ -95,12 +96,13 @@ def create_random_forest(
         x_train (ndarray): Training input examples.
         y_train (ndarray): Training target values.
         hyperparameters (Dict[str, List[Any]], optional): Dictionary of hyperparameters for the grid search. Defaults to the fixed ones.
+        n_jobs: Number of jobs to run in parallel in the grid search. (default 4)
 
     Returns:
         RandomForestClassifier: Random forest classifier.
     """
     rf = RandomForestClassifier()
-    clf = RandomizedSearchCV(rf, hyperparameters, refit=True)
+    clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=1)
     clf.fit(x_train, y_train)
     return clf.best_estimator_
 
@@ -156,12 +158,12 @@ def create_attack_dataset(
     return df_in
 
 
-def get_frequencies(values: Union[Iterable, int, float]) -> np.array:
+def frequencies(values: Union[Iterable, int, float]) -> np.array:
     """
     Given a set of values return an array containing the unique values and their respective frequencies.
 
     >>> a = np.array([1 1 1 2 2 2 3 4 4 5 4 5])
-    >>> print(get_frequencies(a))
+    >>> print(frequencies(a))
     >>> array([[1, 3],
     >>>       [2, 3],
     >>>       [3, 1],
