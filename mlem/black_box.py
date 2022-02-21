@@ -42,19 +42,19 @@ class BlackBox(ABC):
 class PyTorchBlackBox(BlackBox):
     """Wrapper for a PyTorch black box classifier."""
 
-    def __init__(self, model: Module, device: torch.device = None) -> None:
+    def __init__(self, model: Module) -> None:
         """
         Args:
             model: model to wrap.
-            device: device on which to move the model.
         """
         self.model = model
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if not device else device
-        model.to(self.device)
+        self.device = next(model.parameters()).device
 
     def predict(self, x: ndarray) -> ndarray:
         """
         Uses the wrapped model to compute predictions.
+
+        The tensor built using the argument is automatically moved on the same device the model is on.
         Args:
             x: values to predict.
 
@@ -77,6 +77,7 @@ class PyTorchBlackBox(BlackBox):
         Returns:
             array of probability vectors.
         """
+        self.model.eval()
         X_tensor = tensor(x, dtype=float32, device=self.device)
         with no_grad():
             y_prob = self.model(X_tensor)
