@@ -147,6 +147,9 @@ def main(
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
+    echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
+
+
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
         parallel(
@@ -172,6 +175,5 @@ def main(
 
 
 if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    echo(f"Using {device=}")
     run(main)
+
