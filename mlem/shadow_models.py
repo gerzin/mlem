@@ -18,12 +18,14 @@ from mlem.utilities import (
     create_attack_dataset,
     create_random_forest,
     save_pickle,
-    save_txt, get_frequencies,
+    save_txt, frequencies,
 )
 
 import logging
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
+
 
 class ShadowModel(ABC):
 
@@ -87,7 +89,7 @@ class ShadowModelsManager:
         self.test_size = test_size
         # Creates the results path if it does not exists
         os.makedirs(results_path, exist_ok=True)
-        logger.debug(f"CREATED: {results_path}")
+        logger.debug(f"RESULTS PATH CREATED: {results_path}")
 
         # SMOTE oversampler
         self.oversampler = SMOTE(random_state=random_state)
@@ -145,7 +147,7 @@ class ShadowModelsManager:
         """
         # List of attack datasets to be concatenated at the end of this loop
         attack_datasets: List[DataFrame] = []
-
+        logger.info(f"Fitting {self.__n_models} Shadow Models")
         for i in range(self.__n_models):
             # Train-test splitting
             x_train, x_test, y_train, y_test = train_test_split(
@@ -153,23 +155,26 @@ class ShadowModelsManager:
             )
             # Oversampling of the minority class
 
-            # TODO tutta questa parte di deve aggiustare
+            # TODO tutta questa parte si deve aggiustare
 
-            x_train, y_train = self.__minority_class_resample(x_train, y_train)
-            for _ in range(10):
-                x_train, y_train = self.__minority_class_resample(x_train, y_train, 10)
+            # smote requires a minimum of samples for each class
+            min_freq = min(frequencies(y_train), key=lambda el: el[1])
+            while min_freq[1] < 10:
+                x_train, y_train = self.__minority_class_resample(x_train, y_train, 11)
+                # frequencies of the labels
+                min_freq = min(frequencies(y_train), key=lambda el: el[1])
 
-
-            logger.debug("SMOTE oversampling")
             # SMOTE oversampling
             x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
 
-            logger.debug("Creating random forest")
+            logger.debug(f"Creating Random Forest {i}")
             # Random Forest obtained via grid search
             rf: RandomForestClassifier = create_random_forest(x_train, y_train)
+            logger.debug(f"Random Forest {i} created")
             # Prediction of the shadow model
 
-            # TODO performance optimization: first predict proba and then assign argmax or something else to y_pred_train and test
+            # TODO performance optimization: first predict proba and then assign argmax or something else to y_pred_train and test if using other models and not the RF
+
             y_pred_train: ndarray = rf.predict(x_train)
             y_prob_train: ndarray = rf.predict_proba(x_train)
 
@@ -179,6 +184,7 @@ class ShadowModelsManager:
             # Classification reports
             report_train: str = classification_report(y_train, y_pred_train)
             report_test: str = classification_report(y_test, y_pred_test)
+            logger.debug(f"Predictions and classification report {i} done")
 
             # TODO this part should not be in the fit method of the SM, but should be done by the caller
             # Path of the shadow model
@@ -204,6 +210,6 @@ class ShadowModelsManager:
             )
             # Saves the shadow model
             save_pickle(f"{path}/model.pkl.bz2", rf)
-            logger.debug("Saved shadow model")
+            logger.debug(f"Saved {i} Shadow Model")
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)
