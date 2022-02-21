@@ -15,6 +15,7 @@ from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle, save_txt
 
 import logging
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +26,7 @@ def __generate_neighborhood(
     sampling_method: SamplingTechnique,
 ) -> ndarray:
     """
-
+    Generate the neighborhood of an instance.
     Args:
         instance:
         explainer:
@@ -65,7 +66,7 @@ def __get_local_data(
         labels:
 
     Returns:
-
+        the local model, the neighborhood and the predictions on the neighborhood made by the local model.
     """
     # Exploits Lime to get the neighborhood and the local model
     _, models, x_neigh = exp.explain_instance(
@@ -120,10 +121,12 @@ def perform_attack_pipeline(
     Returns:
 
     """
+    logger.info("Start Attack Pipeline")
     # Creates a local explainer with a neighborhood
     local_model, x_neigh, y_neigh = __get_local_data(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
     )
+    logger.debug("Done get local data")
     # Path of the current attacked object
     path: str = f"{results_path}/{id}"
     # Path where to save the black box and its data
@@ -158,6 +161,7 @@ def perform_attack_pipeline(
         random_state=random_state,
     )
     # Fits the shadow models to imitate the black boxes.
+
     shadow_models.fit(x_attack, y_attack)
 
     # Extracts the attack dataset of the shadow model for the attack models
