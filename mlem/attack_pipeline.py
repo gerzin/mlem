@@ -27,6 +27,7 @@ def __generate_neighborhood(
 ) -> ndarray:
     """
     Generate the neighborhood of an instance.
+
     Args:
         instance:
         explainer:
@@ -103,20 +104,20 @@ def perform_attack_pipeline(
     """
     Performs
     Args:
-        id: id of what
-        x:
-        y:
-        labels:
-        black_box:
-        results_path:
+        id: index of the row used for the attack.
+        x: row of the train dataset
+        y: label of x
+        labels: list containing all the labels of the train dataset.
+        black_box: black box to attack.
+        results_path: path where to store the results.
         explainer:
         explainer_sampling:
         neighborhood_sampling:
-        attack_full:
+        attack_full: full attack dataset consisting of (probab. vector, true label, in/out label)
         num_samples:
         num_shadow_models:
         test_size:
-        random_state:
+        random_state: seed of random number generators.
 
     Returns:
 
