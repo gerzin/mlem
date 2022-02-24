@@ -93,7 +93,7 @@ def main(
     black_box: BlackBox = None
     if black_box_type == BlackBoxType.NN:
         net = Net()
-        net.load_state_dict(torch.load(black_box_path))  # TODO check
+        net.load_state_dict(torch.load(black_box_path))
         black_box = PyTorchBlackBox(net)
     elif black_box_type == BlackBoxType.RF:
         model = read_pickle(black_box_path)
@@ -106,7 +106,7 @@ def main(
     if explainer_sampling == SamplingTechnique.SAME:
         echo("Sampling of the explainer has to be either 'gaussian' or 'lhs'", err=True)
         exit(1)
-    # Load the input dataset TODO change the way the dataset is loaded. Allow to pass csv.
+    # Load the input dataset
     loaded = load(data_path, allow_pickle=True)
     x_train: ndarray = loaded["X_train"]
     y_train: ndarray = loaded["y_train"]
@@ -147,7 +147,7 @@ def main(
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
-
+    echo(f"Starting MIA for each row. Tot rows = {len(x_train)}")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
         parallel(

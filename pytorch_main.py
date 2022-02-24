@@ -62,9 +62,6 @@ def __full_attack_dataset(
     return attack
 
 
-def parse_arguments():
-    pass
-
 
 def main(
         black_box_path: str,
@@ -147,11 +144,10 @@ def main(
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
+    echo(f"Starting MIA for each row. Tot rows = {len(x_train)}")
     echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
-
-
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
-        # For each row of the matrix perform the MIA
+        # For each row of the matrix perform the MIA # TODO will this terminate in less than a month?
         parallel(
             delayed(perform_attack_pipeline)(
                 id,
