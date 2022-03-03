@@ -2,7 +2,7 @@
 
 Clone the following repo with:
 ```
-$ git clone --recursive https://github.com/karjudev/mlem
+$ git clone --recursive https://github.com/gerzin/mlem.git
 ```
 
 Create a virtual environment by using:
