@@ -15,7 +15,14 @@ Source it with:
 $ source ./virtualenv/bin/activate
 ```
 
-Install all the dependencies with:
+You can install two versions of the dependencies. The first one installs the traditional PyTorch:
+
 ```
 $ pip install -r requirements.txt
+```
+
+The second one uses PyTorch with CUDA support:
+
+```
+$ pip install -r requirements_gpu.txt
 ```
