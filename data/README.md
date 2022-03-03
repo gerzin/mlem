@@ -12,6 +12,10 @@ For each dataset there should (probably) be a PyTorch Dataset class under `../da
 in a module with the same name of the dataset to load. The dataset in this folder are saved raw,
 an eventual pre-processing.
 
+## Datasets
+
+`german`: https://www.kaggle.com/uciml/german-credit?select=german_credit_data.csv
+
 ## SPLITS REPRODUCIBILITY
 ### geotarget
     train_test_split(df, train_size=0.8, shuffle=True, random_state=1234)
