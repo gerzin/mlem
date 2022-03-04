@@ -88,7 +88,7 @@ def create_random_forest(
         x_train: ndarray,
         y_train: ndarray,
         hyperparameters: Dict[str, List[Any]] = __HYPERPARAMETERS,
-        n_jobs = 4
+        n_jobs=4
 ) -> RandomForestClassifier:
     """Creates a random forest classifier via grid search.
 
