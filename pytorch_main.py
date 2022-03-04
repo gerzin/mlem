@@ -74,6 +74,7 @@ def main(
         test_size: float = 0.2,
         random_state: int = 42,
         n_jobs: int = -1,
+        n_rows: int = -1,
 ):
     """Starts a new experimental suite of MLEM with a PyTorch black box.
 
@@ -88,6 +89,7 @@ def main(
         test_size (float, optional): Size of test (in proportion) to extract the data. Defaults to 0.2.\n
         random_state (int, optional): Seed of random number generators. Defaults to 42.\n
         n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).\n
+        n_rows (int, optional): Number of rows of the dataset on which to perform the MIA. Defaults to -1 (all the rows).\n
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
 
@@ -144,8 +146,15 @@ def main(
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
-    echo(f"Starting MIA for each row. Tot rows = {len(x_train)}")
     echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
+
+    if n_rows == -1:
+        n_rows = len(x_train)
+        echo(f"Starting MIA for each row. Tot rows = {len(x_train)}")
+
+    else:
+        echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_train)}")
+
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA # TODO will this terminate in less than a month?
         parallel(
@@ -165,7 +174,7 @@ def main(
                 test_size,
                 random_state,
             )
-            for id, x_row, y_row in zip(indices, x_train, y_train)
+            for id, x_row, y_row in zip(indices[:n_rows], x_train, y_train)
         )
     echo("Experiments are concluded, kudos from MLEM!")
 
