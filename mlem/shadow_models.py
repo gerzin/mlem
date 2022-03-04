@@ -155,8 +155,6 @@ class ShadowModelsManager:
             )
             # Oversampling of the minority class
 
-            # TODO tutta questa parte si deve aggiustare
-
             # smote requires a minimum of samples for each class
             min_freq = min(frequencies(y_train), key=lambda el: el[1])
             while min_freq[1] < 10:
