@@ -62,7 +62,6 @@ def __full_attack_dataset(
     return attack
 
 
-
 def main(
         black_box_path: str,
         results_path: str = "./results",
@@ -93,7 +92,7 @@ def main(
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
 
-    loaded = torch.load(black_box_path)
+    loaded = torch.load(black_box_path, map_location='cpu')
     net = LinearDropLinear()
     net.load_state_dict(loaded['model_state_dict'])
 
@@ -181,4 +180,3 @@ def main(
 
 if __name__ == "__main__":
     run(main)
-
