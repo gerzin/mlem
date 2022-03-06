@@ -12,7 +12,7 @@ from mlem.ensemble import EnsembleClassifier
 from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
 from mlem.shadow_models import ShadowModelsManager
-from mlem.utilities import create_attack_dataset, save_pickle, save_txt
+from mlem.utilities import create_attack_dataset, save_pickle, save_txt, create_random_forest
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,27 +23,35 @@ def __generate_neighborhood(
     instance: ndarray,
     explainer: LimeTabularExplainer,
     num_samples: int,
-    sampling_method: SamplingTechnique,
+    **kwargs,
 ) -> ndarray:
     """
     Generate the neighborhood of an instance.
 
     Args:
-        instance:
-        explainer:
-        num_samples:
-        sampling_method:
-
+        instance: instance around which to generate the neighborhood.
+        explainer: explainer used to generate the neighborhood. The supported ones are: LimeTabularExplainer
+        num_samples: number of neighbors to generate.
+    Keyword Args:
+        sampling_method: (LimeTabularExplainer)
     Returns:
-
+        neighborhood - neighbors of the instance
     """
-    # Generates the neighborhood
-    _, neighborhood = explainer.data_inverse(
-        instance, num_samples, sampling_method.value
-    )
-    # Deletes the first row
-    neighborhood = delete(neighborhood, 0, axis=0)
-    return neighborhood
+    if type(explainer) is LimeTabularExplainer:
+        # Generates the neighborhood
+
+        sampling_method = kwargs.get('sampling_method')
+        if sampling_method is None:
+            raise ValueError("Lime needs a sampling method")
+
+        _, neighborhood = explainer.data_inverse(
+            instance, num_samples, sampling_method.value
+        )
+        # Deletes the first row
+        neighborhood = delete(neighborhood, 0, axis=0)
+        return neighborhood
+    else:
+        raise TypeError("Unsupported explainer type")
 
 
 def __get_local_data(
@@ -86,7 +94,7 @@ def __get_local_data(
 
 
 def perform_attack_pipeline(
-    id: int,
+    idx: int,
     x: ndarray,
     y: ndarray,
     labels: List[Any],
@@ -102,9 +110,12 @@ def perform_attack_pipeline(
     random_state: int,
 ):
     """
-    Performs
+    Execute the MIA Attack with a Local Explainer model on an instance.
+
+
+
     Args:
-        id: index of the row used for the attack.
+        idx: index of the row used for the attack.
         x: row of the train dataset
         y: label of x
         labels: list containing all the labels of the train dataset.
@@ -129,7 +140,7 @@ def perform_attack_pipeline(
     )
     logger.debug("Done get local data")
     # Path of the current attacked object
-    path: str = f"{results_path}/{id}"
+    path: str = f"{results_path}/{idx}"
     # Path where to save the black box and its data
     black_box_path: str = f"{path}/black_box"
     # If needed extracts the attack model
@@ -140,7 +151,7 @@ def perform_attack_pipeline(
         y_attack = y_neigh
     else:
         x_attack = __generate_neighborhood(
-            x, explainer, num_samples, neighborhood_sampling
+            instance=x, explainer=explainer, num_samples=num_samples, sampling_method=neighborhood_sampling
         )
         y_attack = black_box.predict(x_attack)
     # Prediction probability
@@ -170,7 +181,7 @@ def perform_attack_pipeline(
 
     # Creates a number of attack models that infer the relation between probability and belonging
     attack_models = AttackModelsManager(
-        results_path=f"{path}/attack", random_state=random_state
+        results_path=f"{path}/attack", model_creator_fn=create_random_forest, random_state=random_state
     )
 
     # Fits the attack models
@@ -184,4 +195,4 @@ def perform_attack_pipeline(
     # Performs the test on the attack dataset created from the neighborhood
     attack_models.audit(neighborhood_data, "neighborhood")
     # Performs the test on the full attack dataset
-    attack_models.audit(attack_full.drop(index=id), "full")
+    attack_models.audit(attack_full.drop(index=idx), "full")
