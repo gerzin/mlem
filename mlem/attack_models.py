@@ -11,21 +11,23 @@ from pandas.core.frame import DataFrame
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.base import ClassifierMixin
-
+from typing import Callable
 from mlem.utilities import create_random_forest, save_pickle, save_txt
 
 
 class AttackModelsManager:
     """Class that handles a number of attack models."""
 
-    def __init__(self, results_path: str, random_state: int) -> None:
+    def __init__(self, results_path: str, model_creator_fn: Callable, random_state: int) -> None:
         """Creates a new manager of various attack models.
 
         Args:
             results_path (str): String where to save the documents.
+            model_creator_fn ( Callable ): function that takes as input features and targets and returns a classifier.
             random_state (int): Random state used in randomization.
         """
         self.results_path = results_path
+        self.model_creator = model_creator_fn
         self.random_state = random_state
         # List of attack models
         self.attack_models: Dict[ClassifierMixin] = {}
@@ -61,7 +63,7 @@ class AttackModelsManager:
                 y_test=y_test,
             )
             # Attack model used to fit data
-            attack_model: ClassifierMixin = create_random_forest(x_train, y_train)
+            attack_model: ClassifierMixin = self.model_creator(x_train, y_train)
             # Saves the attack model
             save_pickle(f"{path_label_attack}/model.pkl.bz2", attack_model)
             # Prediction of the model based on data
