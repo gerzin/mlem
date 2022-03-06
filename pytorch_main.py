@@ -26,10 +26,6 @@ from joblib import Parallel, delayed, cpu_count
 
 from mlem.attack_pipeline import perform_attack_pipeline
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-
 
 def __full_attack_dataset(
         black_box: BlackBox,
@@ -74,6 +70,7 @@ def main(
         random_state: int = 42,
         n_jobs: int = -1,
         n_rows: int = -1,
+
 ):
     """Starts a new experimental suite of MLEM with a PyTorch black box.
 
@@ -89,7 +86,9 @@ def main(
         random_state (int, optional): Seed of random number generators. Defaults to 42.\n
         n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).\n
         n_rows (int, optional): Number of rows of the dataset on which to perform the MIA. Defaults to -1 (all the rows).\n
+        debug_logging (int, optional): If set to 1 print the debug logs.
     """
+
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
 
     loaded = torch.load(black_box_path, map_location='cpu')
@@ -145,7 +144,6 @@ def main(
     indices: int = range(len(x_train))
     # Batch size
     batch_size: int = len(x_train) // cpu_count()
-    echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
 
     if n_rows == -1:
         n_rows = len(x_train)
@@ -154,11 +152,12 @@ def main(
     else:
         echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_train)}")
 
+    echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA # TODO will this terminate in less than a month?
         parallel(
             delayed(perform_attack_pipeline)(
-                id,
+                idx,
                 x_row,
                 y_row,
                 labels,
@@ -173,7 +172,7 @@ def main(
                 test_size,
                 random_state,
             )
-            for id, x_row, y_row in zip(indices[:n_rows], x_train, y_train)
+            for idx, x_row, y_row in zip(indices[:n_rows], x_train, y_train)
         )
     echo("Experiments are concluded, kudos from MLEM!")
 

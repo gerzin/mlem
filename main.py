@@ -157,11 +157,12 @@ def main(
     else:
         echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_train)}")
 
+    echo(f"Starting Parallel with {n_jobs=} and {batch_size=}")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
         parallel(
             delayed(perform_attack_pipeline)(
-                id,
+                idx,
                 x_row,
                 y_row,
                 labels,
@@ -176,7 +177,7 @@ def main(
                 test_size,
                 random_state,
             )
-            for id, x_row, y_row in zip(indices[:n_rows], x_train, y_train)
+            for idx, x_row, y_row in zip(indices[:n_rows], x_train, y_train)
         )
     echo("Experiments are concluded, kudos from MLEM!")
 
