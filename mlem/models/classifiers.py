@@ -12,15 +12,39 @@ class MLEMAbstractClassifier:
     @property
     @abstractmethod
     def model(self):
+        """
+        Get the inner classifier.
+
+        Returns:
+            object: the wrapped classifier
+        """
         return self._inner_model
 
     @model.setter
     @abstractmethod
     def model(self, model):
+        """
+        Set a new object as classifier.
+
+        Args:
+            model: classifier
+        """
         self._inner_model = model
 
     @abstractmethod
     def fit(self, x, y, *args, **kwargs):
+        """
+        Fit a classifier on some data.
+
+        Args:
+            x: features
+            y: targets
+            *args:
+            **kwargs:
+
+        Returns:
+
+        """
         pass
 
     @abstractmethod
@@ -64,9 +88,9 @@ class MLEMAbstractClassifier:
         with bz2.open(path, "wb") as f:
             pickle.dump(self._inner_model, f)
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def load(path, *args, **kwargs):
+    def load(cls, path, *args, **kwargs):
         """
         Load the model.
 
@@ -79,12 +103,27 @@ class MLEMAbstractClassifier:
         Returns:
 
         """
-        pass
+        print(f"{cls=}")
+        data = bz2.BZ2File(path, "rb")
+        inner_model = pickle.load(data)
+        loaded = cls()
+        loaded.model = inner_model
+        return loaded
 
 
 class MLEMRandomForestClassifier(MLEMAbstractClassifier):
 
     def __init__(self, *args, **kwargs):
+        """
+        Create a new random forest classifier based on skit-learn's RandomForestClassifier.
+
+        Notes:
+            args and kwargs are forwarded to RandomForestClassifier
+
+        Args:
+            *args:
+            **kwargs:
+        """
         self._inner_model = RandomForestClassifier(*args, **kwargs)
 
     @property
@@ -99,18 +138,19 @@ class MLEMRandomForestClassifier(MLEMAbstractClassifier):
         self._inner_model.fit(x, y)
 
     def predict(self, x: np.ndarray, *args, **kwargs) -> Any:
-        self._inner_model.predict(x)
+        return self._inner_model.predict(x)
 
     def predict_proba(self, x: np.ndarray) -> np.ndarray:
-        self._inner_model.predict_proba(x)
+        return self._inner_model.predict_proba(x)
 
     def save(self, path, *args, **kwargs):
         super(MLEMRandomForestClassifier, self).save(path, *args, **kwargs)
 
-    @staticmethod
-    def load(path, *args, **kwargs):
-        data = bz2.BZ2File(path, "rb")
-        inner_model = pickle.load(data)
-        loaded = MLEMRandomForestClassifier()
-        loaded.model = inner_model
-        return loaded
+    @classmethod
+    def load(cls, path, *args, **kwargs):
+        # data = bz2.BZ2File(path, "rb")
+        # inner_model = pickle.load(data)
+        # loaded = MLEMRandomForestClassifier()
+        # loaded.model = inner_model
+        # return loaded
+        return super(MLEMRandomForestClassifier, cls).load(path)
