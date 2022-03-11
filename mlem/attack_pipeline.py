@@ -13,7 +13,6 @@ from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest
-import pdb
 
 import logging
 
@@ -168,8 +167,6 @@ def perform_attack_pipeline(
     save_pickle_bz2(f"{black_box_path}/model.pkl.bz2", local_model)
     # Saves the neighborhood-generated data on disk
     savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
-
-    pdb.set_trace()
 
     # Creates a number of shadow models to imitate the local model
     shadow_models = ShadowModelsManager(
