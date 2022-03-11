@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+from pathlib import Path
 from typing import Any, List
 from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
@@ -90,6 +91,12 @@ def main(
         n_rows (int, optional): Number of rows of the dataset on which to perform the MIA. Defaults to -1 (all the rows).\n
     """
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
+
+    if Path(results_path).exists():
+        print(f"The results_path {results_path} already exists. Continue and overwrite? [y/n]")
+        resp = input("> ")
+        if not resp.lower() in "yes":
+            exit(1)
 
     # Load the black box model
     black_box: BlackBox = None

@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.base import ClassifierMixin
 from typing import Callable
-from mlem.utilities import create_random_forest, save_pickle, save_txt
+from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt
 
 
 class AttackModelsManager:
@@ -65,7 +65,7 @@ class AttackModelsManager:
             # Attack model used to fit data
             attack_model: ClassifierMixin = self.model_creator(x_train, y_train)
             # Saves the attack model
-            save_pickle(f"{path_label_attack}/model.pkl.bz2", attack_model)
+            save_pickle_bz2(f"{path_label_attack}/model.pkl.bz2", attack_model)
             # Prediction of the model based on data
             y_pred_train: ndarray = attack_model.predict(x_train)
             y_pred_test: ndarray = attack_model.predict(x_test)
@@ -129,7 +129,8 @@ class AttackModelsManager:
         report: str = classification_report(y_true, y_pred)
         save_txt(f"{self.results_path}/test_single_concat_{name}.txt", report)
 
-    def __test_all(self, data: DataFrame, name: str): # TODO scrivere che test fa ed effetti collaterali (crea dei file)
+    def __test_all(self, data: DataFrame,
+                   name: str):  # TODO scrivere che test fa ed effetti collaterali (crea dei file)
         """Tests each attack model on the full attack dataset.
 
         Args:

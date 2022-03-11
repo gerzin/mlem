@@ -1,70 +1,25 @@
 import os
-from abc import ABC, abstractmethod
 from typing import List, Tuple
 import numpy as np
-from numpy import concatenate, ndarray, savez_compressed
-from numpy.core.fromnumeric import argmin
-from numpy.core.shape_base import vstack
-from numpy.lib.arraysetops import unique
+from numpy import ndarray, savez_compressed
+
 from pandas import DataFrame, concat
-from sklearn.utils import resample
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import SMOTE, RandomOverSampler
 
 from mlem.utilities import (
     create_attack_dataset,
     create_random_forest,
-    save_pickle,
-    save_txt, frequencies,
+    save_pickle_bz2,
+    save_txt, frequencies, minority_class_resample,
 )
 
 import logging
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
-
-
-class ShadowModel(ABC):
-
-    @abstractmethod
-    def fit(self, x: ndarray, y: ndarray) -> None:
-        """
-        Fit the model on some data
-        Args:
-            x: features
-            y: targets
-
-        Returns:
-            None
-        """
-        pass
-
-    @abstractmethod
-    def predict(self, x: ndarray) -> ndarray:
-        """Predicts an output from an unseen example.
-
-        Args:
-            x (ndarray): Input example
-
-        Returns:
-            ndarray: Predicted value
-        """
-        pass
-
-    @abstractmethod
-    def predict_proba(self, x: ndarray) -> ndarray:
-        """Prediction probability from an unseen example.
-
-        Args:
-            x (ndarray): Input example.
-
-        Returns:
-            ndarray: Predicted value.
-        """
-        pass
 
 
 # TODO this class is using random forests as shadow model.
@@ -99,31 +54,6 @@ class ShadowModelsManager:
     # TODO this method isn't calling self. Should probably move it under utilities
     #      also, consider using numba to improve speed
     #      Question: why are we doing this? Wouldn't smote suffice?
-    def __minority_class_resample(self, x: ndarray, y: ndarray, n_samples: int = 50) -> Tuple[ndarray, ndarray]:
-        """Resamples x and y generating n_samples elements of the minority class.
-
-        Args:
-            x (ndarray): Input data.
-            y (ndarray): Target labels.
-            n_samples (int, optional): Number of samples to be drawn for the minority class. Defaults to 50.
-
-        Returns:
-            Tuple[ndarray, ndarray]: Resampled x and y.
-        """
-        # Unique classes and their frequencies
-        classes, occurrences = unique(y, return_counts=True)
-        # Minority class
-        min_class: int = classes[argmin(occurrences)]
-        # Records of every other class
-        x_maj, y_maj = x[y != min_class], y[y != min_class]
-        # Records of the minority class
-        x_min, y_min = x[y == min_class], y[y == min_class]
-        # Resamples the minority class
-        x_min, y_min = resample(x_min, y_min, n_samples=n_samples)
-        # Reconstructs the original dataset
-        x = vstack((x_maj, x_min))
-        y = concatenate((y_maj, y_min))
-        return x, y
 
     def get_attack_dataset(self) -> DataFrame:
         """
@@ -158,20 +88,19 @@ class ShadowModelsManager:
             # smote requires a minimum of samples for each class
             min_freq = min(frequencies(y_train), key=lambda el: el[1])
             while min_freq[1] < 10:
-                x_train, y_train = self.__minority_class_resample(x_train, y_train, 11)
+                x_train, y_train = minority_class_resample(x_train, y_train, 11)
                 # frequencies of the labels
                 min_freq = min(frequencies(y_train), key=lambda el: el[1])
 
             # SMOTE oversampling
             x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
 
-            logger.debug(f"Creating Random Forest {i}")
             # Random Forest obtained via grid search
+            # TODO split classifier creation from grid search
             rf: RandomForestClassifier = create_random_forest(x_train, y_train)
+
             logger.debug(f"Random Forest {i} created")
             # Prediction of the shadow model
-
-            # TODO performance optimization: first predict proba and then assign argmax or something else to y_pred_train and test if using other models and not the RF
 
             y_pred_train: ndarray = rf.predict(x_train)
             y_prob_train: ndarray = rf.predict_proba(x_train)
@@ -207,7 +136,7 @@ class ShadowModelsManager:
                 y_test=y_test,
             )
             # Saves the shadow model
-            save_pickle(f"{path}/model.pkl.bz2", rf)
+            save_pickle_bz2(f"{path}/model.pkl.bz2", rf)
             logger.debug(f"Saved {i} Shadow Model")
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)

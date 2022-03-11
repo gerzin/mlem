@@ -2,12 +2,12 @@
 import os
 import sys
 from typing import Any, List
-from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
 from pandas.core.frame import DataFrame
 
 from blackboxes.pytorch.linear import LinearDropLinear
 from mlem.utilities import create_attack_dataset
+from pathlib import Path
 
 # Adds LIME to the system
 sys.path.append("./lime")
@@ -86,10 +86,15 @@ def main(
         random_state (int, optional): Seed of random number generators. Defaults to 42.\n
         n_jobs (int, optional): Number of jobs used by JobLib to parallelize the works. Defaults to -1 (all the available cores).\n
         n_rows (int, optional): Number of rows of the dataset on which to perform the MIA. Defaults to -1 (all the rows).\n
-        debug_logging (int, optional): If set to 1 print the debug logs.
     """
 
     echo("MLEM: MIA (Membership Inference Attack) of Local Explanation Methods")
+
+    if Path(results_path).exists():
+        echo(f"The results_path {results_path} already exists. Continue and overwrite? [y/n]")
+        resp = input("> ")
+        if not resp.lower() in "yes":
+            exit(1)
 
     loaded = torch.load(black_box_path, map_location='cpu')
     net = LinearDropLinear()

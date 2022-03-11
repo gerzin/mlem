@@ -12,18 +12,20 @@ from mlem.ensemble import EnsembleClassifier
 from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
 from mlem.shadow_models import ShadowModelsManager
-from mlem.utilities import create_attack_dataset, save_pickle, save_txt, create_random_forest
+from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest
+import pdb
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 def __generate_neighborhood(
-    instance: ndarray,
-    explainer: LimeTabularExplainer,
-    num_samples: int,
-    **kwargs,
+        instance: ndarray,
+        explainer: LimeTabularExplainer,
+        num_samples: int,
+        **kwargs,
 ) -> ndarray:
     """
     Generate the neighborhood of an instance.
@@ -55,13 +57,13 @@ def __generate_neighborhood(
 
 
 def __get_local_data(
-    x: ndarray,
-    y: ndarray,
-    exp: LimeTabularExplainer,
-    black_box: BlackBox,
-    sampling_method: SamplingTechnique,
-    num_samples: int,
-    labels: Sequence[Any],
+        x: ndarray,
+        y: ndarray,
+        exp: LimeTabularExplainer,
+        black_box: BlackBox,
+        sampling_method: SamplingTechnique,
+        num_samples: int,
+        labels: Sequence[Any],
 ) -> Tuple[EnsembleClassifier, ndarray, ndarray]:
     """
 
@@ -94,20 +96,20 @@ def __get_local_data(
 
 
 def perform_attack_pipeline(
-    idx: int,
-    x: ndarray,
-    y: ndarray,
-    labels: List[Any],
-    black_box: BlackBox,
-    results_path: str,
-    explainer: LimeTabularExplainer,
-    explainer_sampling: SamplingTechnique,
-    neighborhood_sampling: SamplingTechnique,
-    attack_full: DataFrame,
-    num_samples: int,
-    num_shadow_models: int,
-    test_size: float,
-    random_state: int,
+        idx: int,
+        x: ndarray,
+        y: ndarray,
+        labels: List[Any],
+        black_box: BlackBox,
+        results_path: str,
+        explainer: LimeTabularExplainer,
+        explainer_sampling: SamplingTechnique,
+        neighborhood_sampling: SamplingTechnique,
+        attack_full: DataFrame,
+        num_samples: int,
+        num_shadow_models: int,
+        test_size: float,
+        random_state: int,
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -134,11 +136,12 @@ def perform_attack_pipeline(
 
     """
     logger.info("Start Attack Pipeline")
+
     # Creates a local explainer with a neighborhood
     local_model, x_neigh, y_neigh = __get_local_data(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
     )
-    logger.debug("Done get local data")
+
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
     # Path where to save the black box and its data
@@ -154,6 +157,7 @@ def perform_attack_pipeline(
             instance=x, explainer=explainer, num_samples=num_samples, sampling_method=neighborhood_sampling
         )
         y_attack = black_box.predict(x_attack)
+
     # Prediction probability
     y_prob: ndarray = black_box.predict_proba(x_attack)
     # Attack dataset created on the neighborhood
@@ -161,9 +165,11 @@ def perform_attack_pipeline(
     # Creates the shadow models path
     os.makedirs(black_box_path, exist_ok=True)
     # Saves the local model on disk
-    save_pickle(f"{black_box_path}/model.pkl.bz2", local_model)
+    save_pickle_bz2(f"{black_box_path}/model.pkl.bz2", local_model)
     # Saves the neighborhood-generated data on disk
     savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
+
+    pdb.set_trace()
 
     # Creates a number of shadow models to imitate the local model
     shadow_models = ShadowModelsManager(
