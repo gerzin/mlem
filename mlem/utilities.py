@@ -2,15 +2,19 @@ import bz2
 import pickle
 from typing import Any, Dict, List, Tuple, Union, Iterable
 import numpy as np
-from numpy import ndarray
+from numpy import ndarray, concatenate
 from pandas import concat
 from pandas.core.frame import DataFrame
 from sklearn.ensemble import RandomForestClassifier
-
+import warnings
 from sklearn.model_selection import RandomizedSearchCV
+from numpy.core.fromnumeric import argmin
+from numpy.core.shape_base import vstack
+from numpy.lib.arraysetops import unique
+from sklearn.utils import resample
 
 
-def save_pickle(path: str, object: Any):
+def save_pickle_bz2(path: str, object: Any):
     """Saves a pickle file compressed in BZ2 format.
 
     Args:
@@ -19,6 +23,21 @@ def save_pickle(path: str, object: Any):
     """
     with bz2.open(path, "wb") as f:
         pickle.dump(object, f)
+
+
+def load_pickle_bz2(path):
+    """
+    Loads data saved with save_pickle_bz2
+
+    Args:
+        path (str): Path where the data are located
+
+    Returns:
+        loaded object
+    """
+    with bz2.BZ2File(path) as f:
+        data = pickle.load(f)
+    return data
 
 
 def save_txt(path: str, txt: str):
@@ -101,6 +120,7 @@ def create_random_forest(
     Returns:
         RandomForestClassifier: Random forest classifier.
     """
+
     rf = RandomForestClassifier()
     clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=1)
     clf.fit(x_train, y_train)
@@ -115,13 +135,16 @@ def __create_local_attack_dataset(
     """Creates a dataframe of the form (y_prob, y, "in" / "out") to be used for
     the creation of a dataset for the Attack Model of the Membership Inference.
 
+
+
     Args:
         y_prob (ndarray): Prediction probability for the shadow model.
         y (ndarray): Target label predicted by the shadow model.
         inout (str): Whether these data come from the training test ("in") or test set ("out").
 
     Returns:
-        DataFrame: Local attack dataset.
+        DataFrame: Local attack dataset. The dataframe contains one column for each class with its respective probability,
+        plus a column "label" with the real label and a column "inout" with the value "in" or "out"
     """
     df = DataFrame(y_prob)
     df["label"] = y
@@ -136,18 +159,14 @@ def create_attack_dataset(
         y_test: ndarray = None,
 ) -> DataFrame:
     """Creates a dataset for the Membership Inference Attack Model.
-
-
     Creates an attack dataset by creating tuples of the form (y_prob_train, y_train, "in") for the
     data belonging to the train set of the model we are trying to attack and (y_prob_test, y_test, "out")
     for the data in the test set of that model.
-
     Args:
         y_prob_train (ndarray): Predicted probabilities on the training set.
         y_train (ndarray): Labels of the training set.
         y_prob_test (ndarray, optional): Predicted probabilities on the test set.
         y_test (ndarray, optional): Labels of the test set.
-
     Returns:
         DataFrame: Local attack model.
     """
@@ -156,6 +175,33 @@ def create_attack_dataset(
         df_out: DataFrame = __create_local_attack_dataset(y_prob_test, y_test, "out")
         return concat([df_in, df_out])
     return df_in
+
+
+def minority_class_resample(x: ndarray, y: ndarray, n_samples: int = 50) -> Tuple[ndarray, ndarray]:
+    """Resamples x and y generating n_samples elements of the minority class.
+
+    Args:
+        x (ndarray): Input data.
+        y (ndarray): Target labels.
+        n_samples (int, optional): Number of samples to be drawn for the minority class. Defaults to 50.
+
+    Returns:
+        Tuple[ndarray, ndarray]: Resampled x and y.
+    """
+    # Unique classes and their frequencies
+    classes, occurrences = unique(y, return_counts=True)
+    # Minority class
+    min_class: int = classes[argmin(occurrences)]
+    # Records of every other class
+    x_maj, y_maj = x[y != min_class], y[y != min_class]
+    # Records of the minority class
+    x_min, y_min = x[y == min_class], y[y == min_class]
+    # Resamples the minority class
+    x_min, y_min = resample(x_min, y_min, n_samples=n_samples)
+    # Reconstructs the original dataset
+    x = vstack((x_maj, x_min))
+    y = concatenate((y_maj, y_min))
+    return x, y
 
 
 def frequencies(values: Union[Iterable, int, float]) -> np.array:
