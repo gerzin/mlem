@@ -141,6 +141,27 @@ def perform_attack_pipeline(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
     )
 
+    # check that in the neighborhood each target is represented.
+    # if there are target which are not represented, it retries the generation of an explainer expanding
+    # the neighborhood up to n_retries times before failing.
+
+    # TODO: move this in __get_local_data
+    n_retries_left = 3
+    s_labels = set(labels)
+    s_y_neigh = set(y_neigh)
+    percentage_increase = 0.1  # increase by 10% at each iteration
+    while s_labels != s_y_neigh:
+        difference = s_labels.difference(s_y_neigh)
+        print(f"Labels not represented: {list(difference)}")
+        num_samples += percentage_increase * num_samples
+        # Creates a local explainer with a neighborhood
+        local_model, x_neigh, y_neigh = __get_local_data(
+            x, y, explainer, black_box, explainer_sampling, num_samples, labels
+        )
+        n_retries_left -= 1
+        if n_retries_left == 0:
+            print("Failed to generate neighborhood")
+
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
     # Path where to save the black box and its data
