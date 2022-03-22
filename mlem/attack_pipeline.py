@@ -154,6 +154,7 @@ def perform_attack_pipeline(
         difference = s_labels.difference(s_y_neigh)
         print(f"Labels not represented: {list(difference)}")
         num_samples += percentage_increase * num_samples
+        num_samples = int(num_samples)
         # Creates a local explainer with a neighborhood
         local_model, x_neigh, y_neigh = __get_local_data(
             x, y, explainer, black_box, explainer_sampling, num_samples, labels
