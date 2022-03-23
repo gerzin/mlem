@@ -159,9 +159,14 @@ def perform_attack_pipeline(
         local_model, x_neigh, y_neigh = __get_local_data(
             x, y, explainer, black_box, explainer_sampling, num_samples, labels
         )
+        
+        s_labels = set(labels)
+        s_y_neigh = set(y_neigh)
         n_retries_left -= 1
-        if n_retries_left == 0:
+
+        if not n_retries_left:
             print("Failed to generate neighborhood")
+            break
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
