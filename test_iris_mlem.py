@@ -30,6 +30,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 
 
+#
 class Model(nn.Module):
     def __init__(self, input_dim):
         super(Model, self).__init__()
