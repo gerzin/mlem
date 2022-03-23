@@ -95,7 +95,7 @@ def load_train_test_datasets(path: str) -> Tuple[ndarray, ndarray, ndarray, ndar
 __HYPERPARAMETERS = {
     "bootstrap": [True, False],
     "max_depth": [100, 350, 500],
-    "max_features": [5, "auto", "sqrt"],
+    "max_features": ["auto", "sqrt"],
     "min_samples_leaf": [10, 20, 50],
     "min_samples_split": [5, 10, 50],
     "n_estimators": [100, 350, 500],
@@ -122,7 +122,7 @@ def create_random_forest(
     """
 
     rf = RandomForestClassifier()
-    clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=1)
+    clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
     return clf.best_estimator_
 
