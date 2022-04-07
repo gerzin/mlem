@@ -51,10 +51,6 @@ class ShadowModelsManager:
 
         self.attack_dataset = None  # set in self.fit
 
-    # TODO this method isn't calling self. Should probably move it under utilities
-    #      also, consider using numba to improve speed
-    #      Question: why are we doing this? Wouldn't smote suffice?
-
     def get_attack_dataset(self) -> DataFrame:
         """
         Get the dataset for the M.I. Attack Model.
@@ -64,12 +60,17 @@ class ShadowModelsManager:
         Returns:
             DataFrame containing records of the form (probab. vector, true label, in/out)
         """
+        if self.attack_dataset is None:
+            raise Exception("The attack dataset is available only after the shadow models have been fit")
         return self.attack_dataset
 
     def fit(self, x: ndarray, y: ndarray) -> None:
         """Fits a number of shadow models, tests them and initializes self.attack_dataset.
 
-        This method creates n shadow models and saves them and their input data
+
+        This method creates n shadow models and saves them and their input data. For each shadow model first it splits
+        the data into train and test sets and, after training, inserts in self.attack_dataset tuples of the form
+        (prob, y, in) for the data in the train set and (prob, y, out) for the data in the test set.
 
         Args:
             x (ndarray): Input examples.
@@ -83,7 +84,7 @@ class ShadowModelsManager:
             x_train, x_test, y_train, y_test = train_test_split(
                 x, y, test_size=self.test_size
             )
-            # Oversampling of the minority class
+            # Oversampling of the minority classes
 
             # smote requires a minimum of samples for each class
             min_freq = min(frequencies(y_train), key=lambda el: el[1])
@@ -100,7 +101,7 @@ class ShadowModelsManager:
             rf: RandomForestClassifier = create_random_forest(x_train, y_train)
 
             logger.debug(f"Random Forest {i} created")
-            # Prediction of the shadow model
+            # Predictions of the shadow model on the train and test set
 
             y_pred_train: ndarray = rf.predict(x_train)
             y_prob_train: ndarray = rf.predict_proba(x_train)
@@ -138,5 +139,6 @@ class ShadowModelsManager:
             # Saves the shadow model
             save_pickle_bz2(f"{path}/model.pkl.bz2", rf)
             logger.debug(f"Saved {i} Shadow Model")
+
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)
