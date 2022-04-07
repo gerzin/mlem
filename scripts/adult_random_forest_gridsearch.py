@@ -26,7 +26,7 @@ TRAINSET_PATH = ROOT / "test" / "test.csv"
 TESTSET_PATH = ROOT / "train" / "train.csv"
 
 print(f"{TRAINSET_PATH=}")
-print(f"{TRAINSET_PATH=}")
+print(f"{TESTSET_PATH=}")
 
 test = pd.read_csv(TESTSET_PATH).to_numpy()
 train = pd.read_csv(TRAINSET_PATH).to_numpy()
