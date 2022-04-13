@@ -21,9 +21,9 @@ def save_pickle_bz2(path: str, obj):
         pickle.dump(obj, f)
 
 
-ROOT = Path(__file__).parent.parent / "data" / "adult"
-TRAINSET_PATH = ROOT / "test" / "test.csv"
-TESTSET_PATH = ROOT / "train" / "train.csv"
+ROOT = Path(__file__).parent.parent / "notebooks" / "datasets" / "adult"
+TRAINSET_PATH = ROOT / "adult_trainset.csv"
+TESTSET_PATH = ROOT / "adult_testset.csv"
 
 print(f"{TRAINSET_PATH=}")
 print(f"{TESTSET_PATH=}")
@@ -31,8 +31,8 @@ print(f"{TESTSET_PATH=}")
 test = pd.read_csv(TESTSET_PATH).to_numpy()
 train = pd.read_csv(TRAINSET_PATH).to_numpy()
 
-X_train, y_train = train[:, :-1], train[:, -1].astype(int)
-X_test, y_test = test[:, :-1], test[:, -1].astype(int)
+X_train, y_train = train[:, 1:-2], train[:, -2].astype(int)
+X_test, y_test = test[:, 1:-2], test[:, -2].astype(int)
 
 # Hyperparameters of the grid search
 __HYPERPARAMETERS = {
@@ -41,7 +41,7 @@ __HYPERPARAMETERS = {
     "max_features": ["auto", "sqrt"],
     "min_samples_leaf": [10, 20, 50],
     "min_samples_split": [5, 10, 50],
-    "n_estimators": [100, 350, 500],
+    "n_estimators": [100, 150, 350, 500],
     "criterion": ["gini", "entropy"],
 }
 
