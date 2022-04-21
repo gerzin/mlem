@@ -18,6 +18,8 @@ from mlem.utilities import load_pickle_bz2
 from lime.lime_tabular import LimeTabularExplainer
 from joblib import Parallel, delayed, cpu_count
 
+SAMPLING_METHOD = "lhs"
+
 
 def __get_local_data(
         x: ndarray,
@@ -69,12 +71,14 @@ def check_row(row_id, features, targets, labels, bb, explainer):
     y = targets[row_id]
 
     model, x_neigh, y_neigh = __get_local_data(x, y, black_box=bb, num_samples=5000, labels=labels, exp=explainer,
-                                               sampling_method="lhs")
+                                               sampling_method=SAMPLING_METHOD)
 
     set_lab = set(labels)
     set_y_neigh = set(y_neigh)
     if len(set_lab - set_y_neigh) != 0:
-        print(f"Row {row_id}: y_neigh: {set_y_neigh}")
+        print(f"Row {row_id}: PROBLEM  {set_y_neigh}")
+    else:
+        print(f"Row {row_id}: OK")
 
 
 if __name__ == '__main__':
@@ -97,7 +101,9 @@ if __name__ == '__main__':
     print("Data Loaded")
 
     labels = np.unique(np.concatenate([y_train, y_test])).tolist()
+    print()
     print(f"Labels Detected: {labels}")
+    print(f"{SAMPLING_METHOD=}")
 
     indices: int = range(len(x_train))
 
