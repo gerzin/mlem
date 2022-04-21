@@ -124,6 +124,7 @@ def create_random_forest(
     rf = RandomForestClassifier()
     clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
+    print(f"GRID_SEARCH BEST PARAMS: {clf.best_params_=}")
     return clf.best_estimator_
 
 
