@@ -118,10 +118,16 @@ def main(
         exit(1)
     # Load the input dataset
     loaded = load(data_path, allow_pickle=True)
-    x_train: ndarray = loaded["x_train"]
-    y_train: ndarray = loaded["y_train"]
-    x_test: ndarray = loaded["x_test"]
-    y_test: ndarray = loaded["y_test"]
+    try:
+        x_train: ndarray = loaded["x_train"]
+        y_train: ndarray = loaded["y_train"]
+        x_test: ndarray = loaded["x_test"]
+        y_test: ndarray = loaded["y_test"]
+    except KeyError as e:
+        x_train: ndarray = loaded["X_train"]
+        y_train: ndarray = loaded["y_train"]
+        x_test: ndarray = loaded["X_test"]
+        y_test: ndarray = loaded["y_test"]
     # pdb.set_trace()
     # List of target labels
     labels: List[Any] = unique(concatenate([y_train, y_test])).tolist()
@@ -187,7 +193,7 @@ def main(
                 test_size,
                 random_state,
             )
-            for idx, x_row, y_row in zip(indices[15:16], x_train, y_train)
+            for idx, x_row, y_row in zip(indices, x_train, y_train)
         )
     echo("Experiments are concluded, kudos from MLEM!")
 
