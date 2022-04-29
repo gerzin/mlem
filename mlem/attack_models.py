@@ -83,7 +83,7 @@ class AttackModelsManager:
 
         Args:
             x (ndarray): Input data.
-            label (int): Corresponding label.
+            label (int): Corresponding label used to retrieve the right attack model.
 
         Returns:
             ndarray: Output value.

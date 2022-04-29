@@ -12,6 +12,8 @@ from numpy.core.fromnumeric import argmin
 from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
 from sklearn.utils import resample
+from sklearn.experimental import enable_halving_search_cv
+from sklearn.model_selection import HalvingGridSearchCV
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -107,7 +109,8 @@ def create_random_forest(
         x_train: ndarray,
         y_train: ndarray,
         hyperparameters: Dict[str, List[Any]] = __HYPERPARAMETERS,
-        n_jobs=4
+        n_jobs=4,
+        use_halving=True
 ) -> RandomForestClassifier:
     """Creates a random forest classifier via grid search.
 
@@ -116,13 +119,18 @@ def create_random_forest(
         y_train (ndarray): Training target values.
         hyperparameters (Dict[str, List[Any]], optional): Dictionary of hyperparameters for the grid search. Defaults to the fixed ones.
         n_jobs: Number of jobs to run in parallel in the grid search. (default 4)
+        use_halving (bool): If true use the HalvingGridSearch
 
     Returns:
         RandomForestClassifier: Random forest classifier.
     """
 
     rf = RandomForestClassifier()
-    clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
+
+    if use_halving:
+        clf = HalvingGridSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
+    else:
+        clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
     print(f"GRID_SEARCH BEST PARAMS: {clf.best_params_=}")
     return clf.best_estimator_
