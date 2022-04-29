@@ -8,6 +8,7 @@ from torch.optim.optimizer import Optimizer
 from torch.nn import functional as F
 from torch.nn import Module
 from typing import Callable
+import numpy as np
 
 
 def train(model: Module, optimizer: Optimizer, loss_fn: Callable, train_loader: DataLoader, test_loader: DataLoader,
@@ -64,4 +65,3 @@ def train(model: Module, optimizer: Optimizer, loss_fn: Callable, train_loader: 
         print('Epoch: {}, Training Loss: {:.2f}, Test Loss: {:2f}, accuracy = {:.2f}'.format(epoch, training_loss,
                                                                                              test_loss,
                                                                                              num_correct / num_examples))
-
