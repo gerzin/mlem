@@ -65,19 +65,18 @@ def __get_local_data(
         labels: Sequence[Any],
 ) -> Tuple[EnsembleClassifier, ndarray, ndarray]:
     """
-
-    Args:
-        x:
-        y:
-        exp:
-        black_box:
-        sampling_method:
-        num_samples:
-        labels:
-
-    Returns:
-        the local model, the neighborhood and the predictions on the neighborhood made by the local model.
-    """
+        Args:
+            x:
+            y:
+            exp:
+            black_box:
+            sampling_method:
+            num_samples:
+            labels:
+        Returns:
+            the local model, the neighborhood and the predictions on the neighborhood made by the local model.
+        """
+    print("Entering Get Local Data")
     # Exploits Lime to get the neighborhood and the local model
     _, models, x_neigh = exp.explain_instance(
         x,
@@ -87,6 +86,7 @@ def __get_local_data(
         num_samples=num_samples,
         num_features=len(x),
     )
+    print("Exiting explain instance")
     # Local model is the one pointed by the instance
     local_model = EnsembleClassifier(regressors=models)
     # Generates predictions for the neighborhood
@@ -141,37 +141,14 @@ def perform_attack_pipeline(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
     )
 
-    # check that in the neighborhood each target is represented.
-    # if there are target which are not represented, it retries the generation of an explainer expanding
-    # the neighborhood up to n_retries times before failing.
-
-    # TODO: move this in __get_local_data
-    n_retries_left = 3
-    s_labels = set(labels)
-    s_y_neigh = set(y_neigh)
-    percentage_increase = 0.1  # increase by 10% at each iteration
-    while s_labels != s_y_neigh:
-        difference = s_labels.difference(s_y_neigh)
-        print(f"Labels not represented: {list(difference)}")
-        num_samples += percentage_increase * num_samples
-        num_samples = int(num_samples)
-        # Creates a local explainer with a neighborhood
-        local_model, x_neigh, y_neigh = __get_local_data(
-            x, y, explainer, black_box, explainer_sampling, num_samples, labels
-        )
-        
-        s_labels = set(labels)
-        s_y_neigh = set(y_neigh)
-        n_retries_left -= 1
-
-        if not n_retries_left:
-            print("Failed to generate neighborhood")
-            break
+    if set(labels) != set(y_neigh):
+        print(f"WARNING: Neighborhood doesn't contain all labels. Missing: {set(labels) - set(y_neigh)}")
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
     # Path where to save the black box and its data
     black_box_path: str = f"{path}/black_box"
+
     # If needed extracts the attack model
     x_attack: ndarray = None
     y_attack: ndarray = None
@@ -184,9 +161,9 @@ def perform_attack_pipeline(
         )
         y_attack = black_box.predict(x_attack)
 
-    # Prediction probability
+    # Prediction probability on neighborhood
     y_prob: ndarray = black_box.predict_proba(x_attack)
-    # Attack dataset created on the neighborhood
+    # Attack dataset created on the neighborhood #qui solo (y_prob, y_attack, "in")
     neighborhood_data: DataFrame = create_attack_dataset(y_prob, y_attack)
     # Creates the shadow models path
     os.makedirs(black_box_path, exist_ok=True)
@@ -216,7 +193,8 @@ def perform_attack_pipeline(
 
     # Fits the attack models
     attack_models.fit(attack_dataset)
-    # Checks if the record (in the training set) is recognized as "in"
+
+    # Checks if the record (in the training set) is recognized as "in" # how do we know which elements of x_attack were in the training set?
     pred_class: str = attack_models.predict(y_prob, y)
     save_txt(
         f"{path}/attack/x_is_in.txt",
@@ -224,5 +202,6 @@ def perform_attack_pipeline(
     )
     # Performs the test on the attack dataset created from the neighborhood
     attack_models.audit(neighborhood_data, "neighborhood")
+
     # Performs the test on the full attack dataset
     attack_models.audit(attack_full.drop(index=idx), "full")
