@@ -28,6 +28,11 @@ from joblib import Parallel, delayed, cpu_count
 from mlem.attack_pipeline import perform_attack_pipeline
 import pdb
 
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 def __full_attack_dataset(
         black_box: BlackBox,

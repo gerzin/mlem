@@ -76,7 +76,6 @@ def __get_local_data(
         Returns:
             the local model, the neighborhood and the predictions on the neighborhood made by the local model.
         """
-    print("Entering Get Local Data")
     # Exploits Lime to get the neighborhood and the local model
     _, models, x_neigh = exp.explain_instance(
         x,
@@ -86,7 +85,6 @@ def __get_local_data(
         num_samples=num_samples,
         num_features=len(x),
     )
-    print("Exiting explain instance")
     # Local model is the one pointed by the instance
     local_model = EnsembleClassifier(regressors=models)
     # Generates predictions for the neighborhood
