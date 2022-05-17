@@ -130,6 +130,8 @@ def main(
         y_test: ndarray = loaded["y_test"]
         x_test_clustered: ndarray = loaded["x_test_clustered"]
         y_test_clustered: ndarray = loaded["y_test_clustered"]
+        print(f"{len(x_test_clustered)=} {len(y_test_clustered)=}")
+        print(f"{y_test_clustered=}")
     except KeyError as e:
         x_train: ndarray = loaded["X_train"]
         y_train: ndarray = loaded["y_train"]
@@ -137,6 +139,9 @@ def main(
         y_test: ndarray = loaded["y_test"]
         x_test_clustered: ndarray = loaded["x_test_clustered"]
         y_test_clustered: ndarray = loaded["y_test_clustered"]
+        print(f"{len(x_test_clustered)=} {len(y_test_clustered)=}")
+        print(f"{y_test_clustered=}")
+
     # pdb.set_trace()
     # List of target labels
     labels: List[Any] = unique(concatenate([y_train, y_test])).tolist()
