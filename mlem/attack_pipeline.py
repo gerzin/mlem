@@ -154,7 +154,7 @@ def perform_attack_pipeline(
     # If needed extracts the attack model
     x_attack: ndarray = None
     y_attack: ndarray = None
-    if local_attack_dataset:
+    if local_attack_dataset is not None:
         x_attack = local_attack_dataset
         y_attack = local_model.predict(x_attack)
     elif neighborhood_sampling == SamplingTechnique.SAME:
