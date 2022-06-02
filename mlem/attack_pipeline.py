@@ -13,6 +13,7 @@ from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest
+import time
 
 import logging
 
@@ -108,6 +109,7 @@ def perform_attack_pipeline(
         num_shadow_models: int,
         test_size: float,
         random_state: int,
+        local_attack_dataset: ndarray = None
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -129,12 +131,13 @@ def perform_attack_pipeline(
         num_shadow_models:
         test_size:
         random_state: seed of random number generators.
+        local_attack_dataset: dataset to label with the local model and use for the creation of the shadow models. (default None)
 
     Returns:
 
     """
-    logger.info("Start Attack Pipeline")
-
+    print(f"Attacking index {idx}")
+    start_time = time.time()
     # Creates a local explainer with a neighborhood
     local_model, x_neigh, y_neigh = __get_local_data(
         x, y, explainer, black_box, explainer_sampling, num_samples, labels
@@ -151,7 +154,10 @@ def perform_attack_pipeline(
     # If needed extracts the attack model
     x_attack: ndarray = None
     y_attack: ndarray = None
-    if neighborhood_sampling == SamplingTechnique.SAME:
+    if local_attack_dataset:
+        x_attack = local_attack_dataset
+        y_attack = local_model.predict(x_attack)
+    elif neighborhood_sampling == SamplingTechnique.SAME:
         x_attack = x_neigh
         y_attack = y_neigh
     else:
@@ -160,13 +166,16 @@ def perform_attack_pipeline(
         )
         y_attack = black_box.predict(x_attack)
 
+    # TODO controllare quese due righe
     # Prediction probability on neighborhood
     y_prob: ndarray = black_box.predict_proba(x_attack)
     # Attack dataset created on the neighborhood #qui solo (y_prob, y_attack, "in")
     neighborhood_data: DataFrame = create_attack_dataset(y_prob, y_attack)
+
     # Creates the shadow models path
     os.makedirs(black_box_path, exist_ok=True)
     # Saves the local model on disk
+    print(f"saving local model for {idx} in {black_box_path}/model.pkl.bz2")
     save_pickle_bz2(f"{black_box_path}/model.pkl.bz2", local_model)
     # Saves the neighborhood-generated data on disk
     savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
@@ -204,3 +213,4 @@ def perform_attack_pipeline(
 
     # Performs the test on the full attack dataset
     attack_models.audit(attack_full.drop(index=idx), "full")
+    print(f"attack on {idx} lasted {time.time() - start_time:.0f}")
