@@ -144,7 +144,7 @@ def perform_attack_pipeline(
     )
 
     if set(labels) != set(y_neigh):
-        print(f"WARNING: Neighborhood doesn't contain all labels. Missing: {set(labels) - set(y_neigh)}")
+        print(f"WARNING: Neighborhood of index {idx} doesn't contain all labels. Missing: {set(labels) - set(y_neigh)}")
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
