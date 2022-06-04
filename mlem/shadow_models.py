@@ -44,7 +44,7 @@ class ShadowModelsManager:
         self.test_size = test_size
         # Creates the results path if it does not exists
         os.makedirs(results_path, exist_ok=True)
-        logger.debug(f"RESULTS PATH CREATED: {results_path}")
+        # logger.debug(f"RESULTS PATH CREATED: {results_path}")
 
         # SMOTE oversampler
         self.oversampler = SMOTE(random_state=random_state)
