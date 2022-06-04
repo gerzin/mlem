@@ -81,7 +81,7 @@ def main(
         n_jobs: int = -1,
         local_attack_dataset_path: str = None
 ):
-    """Starts a new experimental suite of MLEM.
+    """Starts a new experimental suite of MLEM for the Diva Dataset.
 
     Args:\n
         black_box_type (BlackBoxType): Kind of black box to use.\n
