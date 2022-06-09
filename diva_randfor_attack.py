@@ -130,8 +130,8 @@ def main(
         y_train: ndarray = loaded["y_train"]
         x_test: ndarray = loaded["x_test"]
         y_test: ndarray = loaded["y_test"]
-        x_test_clustered: ndarray = loaded["x_test_clustered"]
-        y_test_clustered: ndarray = loaded["y_test_clustered"]
+        x_test_clustered: ndarray = loaded["X_centroids_neighbors"]
+        y_test_clustered: ndarray = loaded["y_centroids_neighbors"]
         print(f"{len(x_test_clustered)=} {len(y_test_clustered)=}")
         print(f"{y_test_clustered=}")
     except KeyError as e:
@@ -139,28 +139,41 @@ def main(
         y_train: ndarray = loaded["y_train"]
         x_test: ndarray = loaded["X_test"]
         y_test: ndarray = loaded["y_test"]
-        x_test_clustered: ndarray = loaded["x_test_clustered"]
-        y_test_clustered: ndarray = loaded["y_test_clustered"]
+        x_test_clustered: ndarray = loaded["X_centroids_neighbors"]
+        y_test_clustered: ndarray = loaded["y_centroids_neighbors"]
         print(f"{len(x_test_clustered)=} {len(y_test_clustered)=}")
         print(f"{y_test_clustered=}")
 
     if local_attack_dataset_path:
         print(f"Using {local_attack_dataset_path}")
         # feature columns
-        cols_to_use = ['ANN_IMPST', 'FLG_PRES_ADESIONE', 'FLG_PRES_RICORSO', 'PESO',
-                       'PESO_ADESIONE', 'SOLVIBILITA', 'STATO_CONTROLLO', 'FL_CONDONO',
-                       'RIMB_NON_CONC', 'RIMB_NON_CONC_DEF', 'DEBITO_IMPOSTA_AUT',
-                       'FLG_PRES_RISCOSS', 'INDAGINE_BANCARIA', 'MAG_IMP_IRPEF_DEF',
-                       'MAG_IMP_RIT_DEF', 'DEBITI_IVA_DIC', 'IMP_BEN_NO_AMM',
-                       'IMP_IMPOR_IMPOST', 'IMP_VE_OPESEN', 'IMP_OPER_NOIMP',
-                       'IMP_CREDAP_COMP', 'IMP_CRED_AP', 'IMP_VERS_PERIOD', 'IMP_V_AGG_IMPON',
-                       'IMP_V_AGG_IVA', 'VAL_ALIQ_M_VOL_IMP', 'VAL_ALIQ_M_ACQ_IMP',
-                       'VAL_ALIQ_MEDIA_VOL', 'VAL_ALIQ_MEDIA_ACQ', 'COD_NATURA_GIUR',
-                       'COD_DIR_REG', 'FLG_VC', 'FLG_RF', 'FLG_FC', 'COD_ATTIV_GEN',
-                       'IMP_UTIL_CONTEC', 'IMP_ESISTZ', 'IMP_ECC_PREC', 'IMP_ECC_PREC_F24',
-                       'IMP_IMPST_DEBITO', 'IMP_IMPST_CREDIT', 'imp_sps_prest_lavoro',
-                       'imp_tot_neg', 'VAR_RIMBORSO', 'VAR_DETRAZIONE', 'VAR_VOL_AFF_POS',
-                       'VAR_VOL_AFF_NEG']
+        cols_to_use = ['FLG_PRES_RISCOSS',
+                       'IMP_V_AGG_IVA',
+                       'SOLVIBILITA',
+                       'VOL_AFF_DICH',
+                       'PESO_ADESIONE',
+                       'TIPO_DICH_ACCERT',
+                       'IMP_ESISTZ',
+                       'DETR_IVA_ACC',
+                       'VAL_ALIQ_MEDIA_ACQ',
+                       'FLG_PRES_RICORSO',
+                       'STATO_CONTROLLO',
+                       'VAL_ALIQ_M_ACQ_IMP',
+                       'FLG_VC',
+                       'IMP_V_AGG_IMPON',
+                       'VAR_RIMBORSO',
+                       'VAL_ALIQ_MEDIA_VOL',
+                       'IMP_IMPST_CREDIT',
+                       'IMP_ACQ_NOIMP',
+                       'COD_ATTIV_GEN',
+                       'IVA_OP_IMPON_DIC',
+                       'IMP_BEN_AMM',
+                       'IMP_ECC_PREC',
+                       'FLG_PRES_BILANCIO',
+                       'imp_tot_pos',
+                       'VAR_DETRAZIONE',
+                       'MAG_IMP_RIT_ACC']
+
         local_attack_dataset = pd.read_csv(local_attack_dataset_path, usecols=cols_to_use)
         local_attack_dataset = local_attack_dataset.to_numpy()
 
