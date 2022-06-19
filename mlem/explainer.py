@@ -11,12 +11,12 @@ class LocalExplainer:
 
 class LoreDTLoader:
     def __init__(self, path):
-        self.path = Path(path)
-        assert Path.exists()
+        self.path_ = Path(path)
+        assert self.path_.exists()
 
     def load(self, index: int):
         index = int(index)
-        dt_path = self.path / f"dt{index}.bz2"
+        dt_path = self.path_ / f"dt{index}.bz2"
         assert dt_path.exists()
         return LoreDT(path=dt_path)
 
