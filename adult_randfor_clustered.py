@@ -148,6 +148,8 @@ def main(
         y_test_clustered: ndarray = loaded["y_test_clustered"]
         print(f"{len(x_test_clustered)=} {len(y_test_clustered)=}")
         print(f"{y_test_clustered=}")
+
+    local_attack_dataset = None
     if local_attack_dataset_path:
         print(f"Using {local_attack_dataset_path}")
         cols_to_use = ['Age', 'Workclass', 'Fnlwgt', 'Education', 'Education-num', 'Marital-status', 'Occupation',
