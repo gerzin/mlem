@@ -152,7 +152,7 @@ def perform_attack_pipeline(
 
     elif type(explainer) is LoreDTLoader:
         # load the local model
-        local_model = LoreDTLoader.load(idx)
+        local_model = explainer.load(index=idx)
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
