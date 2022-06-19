@@ -13,6 +13,8 @@ class ExplainerType(Enum):
 
     # LIME
     LIME = "lime"
+    # LORE DECISION TREES
+    LORE_DTS = "loredts"
 
 
 class SamplingTechnique(Enum):

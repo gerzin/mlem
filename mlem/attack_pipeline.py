@@ -2,7 +2,7 @@
 This module contains the pipeline used to perform an attack on a model.
 """
 import os
-from typing import Any, List, Sequence, Tuple
+from typing import Any, List, Sequence, Tuple, Union
 from numpy import ndarray, delete
 from numpy.lib.npyio import savez_compressed
 from pandas.core.frame import DataFrame
@@ -11,6 +11,7 @@ from mlem.attack_models import AttackModelsManager
 from mlem.ensemble import EnsembleClassifier
 from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
+from mlem.explainer import LoreDTLoader
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest
 import time
@@ -101,7 +102,7 @@ def perform_attack_pipeline(
         labels: List[Any],
         black_box: BlackBox,
         results_path: str,
-        explainer: LimeTabularExplainer,
+        explainer: Union[LimeTabularExplainer, LoreDTLoader],
         explainer_sampling: SamplingTechnique,
         neighborhood_sampling: SamplingTechnique,
         attack_full: DataFrame,
@@ -138,13 +139,20 @@ def perform_attack_pipeline(
     """
     print(f"Attacking index {idx}")
     start_time = time.time()
-    # Creates a local explainer with a neighborhood
-    local_model, x_neigh, y_neigh = __get_local_data(
-        x, y, explainer, black_box, explainer_sampling, num_samples, labels
-    )
 
-    if set(labels) != set(y_neigh):
-        print(f"WARNING: Neighborhood of index {idx} doesn't contain all labels. Missing: {set(labels) - set(y_neigh)}")
+    if type(explainer) is LimeTabularExplainer:
+        # Creates a local explainer with a neighborhood
+        local_model, x_neigh, y_neigh = __get_local_data(
+            x, y, explainer, black_box, explainer_sampling, num_samples, labels
+        )
+
+        if set(labels) != set(y_neigh):
+            print(
+                f"WARNING: Neighborhood of index {idx} doesn't contain all labels. Missing: {set(labels) - set(y_neigh)}")
+
+    elif type(explainer) is LoreDTLoader:
+        # load the local model
+        local_model = LoreDTLoader.load(idx)
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
@@ -157,6 +165,7 @@ def perform_attack_pipeline(
     if local_attack_dataset is not None:
         x_attack = local_attack_dataset
         y_attack = local_model.predict(x_attack)
+
     elif neighborhood_sampling == SamplingTechnique.SAME:
         x_attack = x_neigh
         y_attack = y_neigh
@@ -177,8 +186,10 @@ def perform_attack_pipeline(
     # Saves the local model on disk
     print(f"saving local model for {idx} in {black_box_path}/model.pkl.bz2")
     save_pickle_bz2(f"{black_box_path}/model.pkl.bz2", local_model)
-    # Saves the neighborhood-generated data on disk
-    savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
+
+    if type(explainer) is LimeTabularExplainer:
+        # Saves the neighborhood-generated data on disk
+        savez_compressed(f"{black_box_path}/data", x=x_neigh, y=y_neigh)
 
     # Creates a number of shadow models to imitate the local model
     shadow_models = ShadowModelsManager(
