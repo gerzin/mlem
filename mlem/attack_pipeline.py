@@ -110,7 +110,8 @@ def perform_attack_pipeline(
         num_shadow_models: int,
         test_size: float,
         random_state: int,
-        local_attack_dataset: ndarray = None
+        local_attack_dataset: ndarray = None,
+        model_creator_fn=create_random_forest
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -137,7 +138,7 @@ def perform_attack_pipeline(
     Returns:
 
     """
-    print(f"Attacking index {idx}")
+    print(f"Attacking index {idx} with {model_creator_fn}")
     start_time = time.time()
 
     if type(explainer) is LimeTabularExplainer:
@@ -196,6 +197,7 @@ def perform_attack_pipeline(
         results_path=f"{path}/shadow",
         test_size=test_size,
         random_state=random_state,
+        model_creator_fn=model_creator_fn
     )
     # Fits the shadow models to imitate the black boxes.
 
@@ -206,7 +208,7 @@ def perform_attack_pipeline(
 
     # Creates a number of attack models that infer the relation between probability and belonging
     attack_models = AttackModelsManager(
-        results_path=f"{path}/attack", model_creator_fn=create_random_forest, random_state=random_state
+        results_path=f"{path}/attack", model_creator_fn=model_creator_fn, random_state=random_state
     )
 
     # Fits the attack models

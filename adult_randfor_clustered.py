@@ -10,7 +10,7 @@ from numpy.lib.arraysetops import unique
 from pandas.core.frame import DataFrame
 
 from mlem.explainer import LoreDTLoader
-from mlem.utilities import create_attack_dataset, load_pickle_bz2
+from mlem.utilities import create_attack_dataset, load_pickle_bz2, create_adaboost
 
 # Adds LIME to the system
 sys.path.append("./lime")
@@ -232,7 +232,8 @@ def main(
                 num_shadow_models,
                 test_size,
                 random_state,
-                local_attack_dataset
+                local_attack_dataset,
+                create_adaboost
             )
             for idx, x_row, y_row in zip(indices[:n_rows], x_test_clustered[:n_rows], y_test_clustered[:n_rows])
         )

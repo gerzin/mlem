@@ -12,9 +12,11 @@ from numpy.core.fromnumeric import argmin
 from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
 from sklearn.utils import resample
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import HalvingGridSearchCV
 import pandas as pd
+import scipy.spatial.distance as distance
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -134,6 +136,36 @@ def create_random_forest(
         clf = RandomizedSearchCV(rf, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
     # print(f"GRID_SEARCH BEST PARAMS: {clf.best_params_=}")
+    return clf.best_estimator_
+
+
+__ADA_HYPER = {
+    "n_estimators": [50, 100, 150, 200]
+}
+
+
+def create_adaboost(x_train: ndarray,
+                    y_train: ndarray,
+                    hyperparameters: Dict[str, List[Any]] = __ADA_HYPER,
+                    n_jobs=4,
+                    use_halving=True
+                    ) -> RandomForestClassifier:
+    """Creates a AdaBoost classifier.
+
+    Args:
+        x_train (ndarray): Training input examples.
+        y_train (ndarray): Training target values.
+        hyperparameters (Dict[str, List[Any]], optional): Dictionary of hyperparameters for the grid search. Defaults to the fixed ones.
+        n_jobs: Number of jobs to run in parallel in the grid search. (default 4)
+        use_halving (bool): If true use the HalvingGridSearch
+
+    Returns:
+        RandomForestClassifier: Random forest classifier.
+    """
+
+    ab = AdaBoostClassifier()
+    clf = HalvingGridSearchCV(ab, hyperparameters, refit=True, n_jobs=n_jobs, verbose=1)
+    clf.fit(x_train, y_train)
     return clf.best_estimator_
 
 
@@ -306,3 +338,23 @@ def insert_noise_numerical(dataset: DataFrame, perc: float = 0.1,
         for ind, val in zip(index_to_replace, new_values):
             dataset.iloc[ind, c] = val
     return dataset
+
+
+def sample_from_quantile(data, centroid, nsamples):
+    """
+    Samples closest points to centroids based on quantiles.
+    Args:
+        data: data belonging to the cluster indexed by the centroid.
+        centroid: centroid
+        nsamples: number of samples per quantile.
+
+    Returns:
+
+    """
+    distances = distance.cdist(data, centroid, metric="euclidean")
+    df = pd.DataFrame(data)
+    df['Distances'] = distances
+    labels = ['q1', 'q2', 'q3', 'q4']
+    df['Quantiles'] = pd.qcut(df.Distances, q=4, labels=labels)
+    out = pd.concat([df[df['Quantiles'].eq(label)].sample(nsamples) for label in labels])
+    return out.drop(labels=['Distances', 'Quantiles'], axis=1)

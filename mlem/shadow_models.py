@@ -1,5 +1,5 @@
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 import numpy as np
 from numpy import ndarray, savez_compressed
 
@@ -22,13 +22,12 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 
-# TODO this class is using random forests as shadow model.
-#      Should probably pass the model to use as argument or at least as option.
 class ShadowModelsManager:
     """Class that creates n ShadowModels, trains them and maintains them."""
 
     def __init__(
-            self, n_models: int, results_path: str, test_size: float, random_state: int
+            self, n_models: int, results_path: str, test_size: float, random_state: int,
+            model_creator_fn: Callable = create_random_forest
     ) -> None:
         """Creates a new Shadow Models Manager.
 
@@ -37,6 +36,7 @@ class ShadowModelsManager:
             results_path (str): Path where to save data.
             test_size (float): Size of the test for the splitting.
             random_state (int): Seed of random number generators.
+            model_creator_fn (Callable): function that returns a fitted model on x,y.
         """
 
         self.__n_models = n_models
@@ -48,7 +48,7 @@ class ShadowModelsManager:
 
         # SMOTE oversampler
         self.oversampler = SMOTE(random_state=random_state)
-
+        self.model_creator = model_creator_fn
         self.attack_dataset = None  # set in self.fit
 
     def get_attack_dataset(self) -> DataFrame:
@@ -97,8 +97,8 @@ class ShadowModelsManager:
             x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
 
             # Random Forest obtained via grid search
-            # TODO split classifier creation from grid search
-            rf: RandomForestClassifier = create_random_forest(x_train, y_train)
+            # TODO split classifier creation from grid search (also change names since now it can also be adaboost)
+            rf: RandomForestClassifier = self.model_creator(x_train, y_train)
 
             logger.debug(f"Random Forest {i} created")
             # Predictions of the shadow model on the train and test set
