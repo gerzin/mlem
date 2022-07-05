@@ -164,7 +164,7 @@ def create_adaboost(x_train: ndarray,
     """
 
     ab = AdaBoostClassifier()
-    clf = HalvingGridSearchCV(ab, hyperparameters, refit=True, n_jobs=n_jobs, verbose=1)
+    clf = HalvingGridSearchCV(ab, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
     return clf.best_estimator_
 
