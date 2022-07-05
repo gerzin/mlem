@@ -165,9 +165,7 @@ def perform_attack_pipeline(
     if local_attack_dataset is not None:
         x_attack = local_attack_dataset
         y_attack = local_model.predict(x_attack)
-
     elif neighborhood_sampling == SamplingTechnique.SAME:
-        print("YOLO\n" * 100)
         x_attack = x_neigh
         y_attack = y_neigh
     else:
