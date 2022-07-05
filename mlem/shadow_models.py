@@ -78,7 +78,6 @@ class ShadowModelsManager:
         """
         # List of attack datasets to be concatenated at the end of this loop
         attack_datasets: List[DataFrame] = []
-        logger.info(f"Fitting {self.__n_models} Shadow Models")
         for i in range(self.__n_models):
             # Train-test splitting
             x_train, x_test, y_train, y_test = train_test_split(
@@ -100,7 +99,6 @@ class ShadowModelsManager:
             # TODO split classifier creation from grid search (also change names since now it can also be adaboost)
             rf: RandomForestClassifier = self.model_creator(x_train, y_train)
 
-            logger.debug(f"Random Forest {i} created")
             # Predictions of the shadow model on the train and test set
 
             y_pred_train: ndarray = rf.predict(x_train)
@@ -112,7 +110,6 @@ class ShadowModelsManager:
             # Classification reports
             report_train: str = classification_report(y_train, y_pred_train)
             report_test: str = classification_report(y_test, y_pred_test)
-            logger.debug(f"Predictions and classification report {i} done")
 
             # TODO this part should not be in the fit method of the SM, but should be done by the caller
             # Path of the shadow model

@@ -138,7 +138,7 @@ def perform_attack_pipeline(
     Returns:
 
     """
-    print(f"Attacking index {idx} with {model_creator_fn}")
+    print(f"Attacking index {idx}")
     start_time = time.time()
 
     if type(explainer) is LimeTabularExplainer:
