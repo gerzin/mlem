@@ -236,7 +236,7 @@ def main(
         assert type(n_rows) is int
         echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_test_clustered)}")
 
-    echo(f"Starting Parallel with {n_jobs=} and {batch_size=} using adaboost")
+    echo(f"Starting Parallel with {n_jobs=} and {batch_size=} using Adaboost")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
         parallel(
