@@ -162,7 +162,7 @@ def main(
     labels: List[Any] = unique(concatenate([y_train, y_test])).tolist()
     labels = [int(x) for x in labels]
     # Target labels
-    echo("Input data correctly read from disk")
+    echo("Adult Input data correctly read from disk")
 
     # Attack dataset used in the audit
     attack_full: DataFrame = __full_attack_dataset(
