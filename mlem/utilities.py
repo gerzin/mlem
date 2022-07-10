@@ -17,6 +17,7 @@ from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import HalvingGridSearchCV
 import pandas as pd
 import scipy.spatial.distance as distance
+from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -357,3 +358,43 @@ def sample_from_quantile(data, centroid, nsamples):
     df['Quantiles'] = pd.qcut(df.Distances, q=4, labels=labels)
     out = pd.concat([df[df['Quantiles'].eq(label)].sample(nsamples) for label in labels])
     return out.drop(labels=['Distances', 'Quantiles'], axis=1)
+
+
+def report_and_confusion(y_true, y_pred, ax=None):
+    """
+    Print the classification report and plot the confusion matrix
+    Args:
+
+        y_true: true labels
+        y_pred: predicted labels
+        ax: axes to plot on, if None a new one is created
+
+    Returns:
+
+    """
+    print(classification_report(y_true, y_pred))
+    ConfusionMatrixDisplay.from_predictions(y_true, y_pred, ax=ax)
+
+
+def split_probs_array(arr):
+    """
+    Given an array of probabilities, splits it into sub-arrays based on the most probable class.
+
+    Example:
+    an array like this:
+        [[0.6, 0.4],
+         [0.0, 1.0],
+         [0.2, 0.8]]
+
+    will be split into these two arrays:
+
+        1) [[0.6, 0.4]]
+        2) [[0.0, 1.0],
+            [0.2, 0.8]]
+    """
+    n_classes = len(arr[0])
+    separated = []
+    max_index_row = np.argmax(arr, axis=1)
+    for c in range(n_classes):
+        separated.append(arr[max_index_row == c])
+    return separated
