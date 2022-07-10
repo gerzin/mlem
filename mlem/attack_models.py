@@ -52,7 +52,7 @@ class AttackModelsManager:
             os.makedirs(path_label_attack, exist_ok=True)
             # Splits the dataset into train and test
             x_train, x_test, y_train, y_test = train_test_split(
-                x, y, random_state=self.random_state
+                x, y, random_state=self.random_state, stratify=y  # TODO: Added stratify
             )
             # Saves the input data
             savez_compressed(
