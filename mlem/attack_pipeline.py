@@ -221,7 +221,7 @@ def perform_attack_pipeline(
         f"x = {x}\ny = {y}\ny_prob={y_prob}\npredicted = {pred_class}"
     )
     # Performs the test on the attack dataset created from the neighborhood
-    attack_models.audit(neighborhood_data, "neighborhood")
+    # attack_models.audit(neighborhood_data, "neighborhood") # commented out, due to division by zero warnings
 
     # Performs the test on the full attack dataset
     attack_models.audit(attack_full.drop(index=idx), "full")
