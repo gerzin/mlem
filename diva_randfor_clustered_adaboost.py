@@ -9,6 +9,7 @@ from numpy.core.shape_base import vstack
 from numpy.lib.arraysetops import unique
 from pandas.core.frame import DataFrame
 
+from mlem.attack_models import AttackStrategy
 from mlem.explainer import LoreDTLoader
 from mlem.utilities import create_attack_dataset, load_pickle_bz2, create_adaboost
 
@@ -256,7 +257,8 @@ def main(
                 test_size,
                 random_state,
                 local_attack_dataset,
-                create_adaboost
+                create_adaboost,
+                AttackStrategy.ONE
             )
             for idx, x_row, y_row in zip(indices[:n_rows], x_test_clustered[:n_rows], y_test_clustered[:n_rows])
         )
