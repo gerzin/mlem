@@ -7,7 +7,7 @@ from numpy import ndarray, delete
 from numpy.lib.npyio import savez_compressed
 from pandas.core.frame import DataFrame
 from lime.lime_tabular import LimeTabularExplainer
-from mlem.attack_models import AttackModelsManager
+from mlem.attack_models import AttackModelsManager, AttackStrategy
 from mlem.ensemble import EnsembleClassifier
 from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
@@ -111,7 +111,8 @@ def perform_attack_pipeline(
         test_size: float,
         random_state: int,
         local_attack_dataset: ndarray = None,
-        model_creator_fn=create_random_forest
+        model_creator_fn=create_random_forest,
+        attack_strategy=AttackStrategy.ONE_PER_LABEL
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -119,6 +120,7 @@ def perform_attack_pipeline(
 
 
     Args:
+
         idx: index of the row used for the attack.
         x: row of the train dataset
         y: label of x
@@ -134,6 +136,7 @@ def perform_attack_pipeline(
         test_size:
         random_state: seed of random number generators.
         local_attack_dataset: dataset to label with the local model and use for the creation of the shadow models. (default None)
+        attack_strategy: how to build the attack models, default one for each label
 
     Returns:
 
@@ -208,7 +211,7 @@ def perform_attack_pipeline(
 
     # Creates a number of attack models that infer the relation between probability and belonging
     attack_models = AttackModelsManager(
-        results_path=f"{path}/attack", model_creator_fn=model_creator_fn, random_state=random_state
+        results_path=f"{path}/attack", model_creator_fn=model_creator_fn, attack_strategy=attack_strategy
     )
 
     # Fits the attack models
