@@ -32,12 +32,15 @@ class AttackModelsManager:
         # List of attack models
         self.attack_models: Dict[ClassifierMixin] = {}
 
-    def fit(self, attack_dataset: DataFrame) -> None:
+    def fit(self, attack_dataset: DataFrame, compute_reports=True) -> None:
         """Fits the attack datasets to predict if the record is inside or outside.
+
+        It creates one
         Contextually it performs the test_single.
 
         Args:
             attack_dataset (DataFrame): Attack dataset of the form (prob, label, "in"/"out") created by the shadow models.
+            compute_reports: if True computes the classification reports on the train and test sets and stores them.
         """
         # TODO should find a way to parallelize this loop
 
@@ -51,8 +54,11 @@ class AttackModelsManager:
             # Creates the path if it does not exist
             os.makedirs(path_label_attack, exist_ok=True)
             # Splits the dataset into train and test
+
+            # FIXME: here I got ValueError: The least populated class in y has only 1 member, which is too few.
+            #  The minimum number of groups for any class cannot be less than 2
             x_train, x_test, y_train, y_test = train_test_split(
-                x, y, random_state=self.random_state, stratify=y  # TODO: Added stratify
+                x, y, random_state=self.random_state, stratify=y
             )
             # Saves the input data
             savez_compressed(
@@ -64,19 +70,21 @@ class AttackModelsManager:
             )
             # Attack model used to fit data
             attack_model: ClassifierMixin = self.model_creator(x_train, y_train)
-            # Saves the attack model
-            save_pickle_bz2(f"{path_label_attack}/model.pkl.bz2", attack_model)
-            # Prediction of the model based on data
-            y_pred_train: ndarray = attack_model.predict(x_train)
-            y_pred_test: ndarray = attack_model.predict(x_test)
-            # Report of the classification
-            report_train: str = classification_report(y_train, y_pred_train)
-            report_test: str = classification_report(y_test, y_pred_test)
-            # Saves the report
-            save_txt(f"{path_label_attack}/report_train.txt", report_train)
-            save_txt(f"{path_label_attack}/report_test.txt", report_test)
             # Saves the model
             self.attack_models[label] = attack_model
+            # Saves the attack model
+            save_pickle_bz2(f"{path_label_attack}/model.pkl.bz2", attack_model)
+
+            # Prediction of the model based on data
+            if compute_reports:
+                y_pred_train: ndarray = attack_model.predict(x_train)
+                y_pred_test: ndarray = attack_model.predict(x_test)
+                # Report of the classification
+                report_train: str = classification_report(y_train, y_pred_train)
+                report_test: str = classification_report(y_test, y_pred_test)
+                # Saves the report
+                save_txt(f"{path_label_attack}/report_train.txt", report_train)
+                save_txt(f"{path_label_attack}/report_test.txt", report_test)
 
     def predict(self, x: ndarray, label: int) -> ndarray:
         """Predicts a new data with one of the attack models.
