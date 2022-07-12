@@ -135,7 +135,6 @@ class ShadowModelsManager:
             )
             # Saves the shadow model
             save_pickle_bz2(f"{path}/model.pkl.bz2", rf)
-            logger.debug(f"Saved {i} Shadow Model")
 
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)
