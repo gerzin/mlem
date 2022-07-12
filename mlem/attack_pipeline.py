@@ -225,4 +225,19 @@ def perform_attack_pipeline(
 
     # Performs the test on the full attack dataset
     attack_models.audit(attack_full.drop(index=idx), "full")
-    print(f"attack on {idx} lasted {time.time() - start_time:.0f}")
+    print(f"attack on {idx} lasted {get_duration_(start_time)}")
+
+
+def get_duration_(start):
+    """
+
+    Args:
+        start:
+
+    Returns:
+        string of the format "{minutes}:{seconds}m"
+    """
+    n = time.time() - start
+    m = int(n // 60)
+    s = int(n - (m * 60))
+    return f"{m}:{s}m"
