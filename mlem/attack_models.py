@@ -19,9 +19,9 @@ from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt
 
 class AttackStrategy(Enum):
     # create one attack model and use it for all the labels
-    ONE = auto(),
+    ONE = "one",
     # create one attack model for each label
-    ONE_PER_LABEL = auto()
+    ONE_PER_LABEL = "one_per_label"
 
 
 class AttackModelsManager:
