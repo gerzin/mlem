@@ -141,7 +141,7 @@ def perform_attack_pipeline(
     Returns:
 
     """
-    print(f"Attacking index {idx}")
+    print(f"Attacking index {idx} using {attack_strategy.name} strategy")
     start_time = time.time()
 
     if type(explainer) is LimeTabularExplainer:
