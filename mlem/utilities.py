@@ -1,5 +1,6 @@
 import bz2
 import pickle
+from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union, Iterable, Callable
 import numpy as np
 from numpy import ndarray, concatenate
@@ -46,13 +47,14 @@ def load_pickle_bz2(path):
     return data
 
 
-def save_txt(path: str, txt: str):
+def save_txt(path, txt: str):
     """Saves a text file on disk.
 
     Args:
-        path (str): Path where to save the string.
+        path (str | Path): Path where to save the string.
         txt (str): String to save.
     """
+    path = str(path)
     with open(path, "w") as f:
         f.write(txt)
 
