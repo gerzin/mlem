@@ -112,7 +112,7 @@ def perform_attack_pipeline(
         random_state: int,
         local_attack_dataset: ndarray = None,
         model_creator_fn=create_random_forest,
-        attack_strategy=AttackStrategy.ONE_PER_LABEL
+        attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
