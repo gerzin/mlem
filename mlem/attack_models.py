@@ -28,19 +28,21 @@ class AttackModelsManager:
     """Class that handles a number of attack models."""
 
     def __init__(self, results_path: str, model_creator_fn: Callable,
-                 attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL) -> None:
+                 attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL, **kwargs) -> None:
         """Creates a new manager of various attack models.
 
         Args:
             results_path (str): String where to save the documents.
             model_creator_fn ( Callable ): function that takes as input features and targets and returns a classifier.
-
+        Keyword Args:
+            random_state (int): random state for the train_test_split (default None)
         """
         self.results_path = results_path
         self.model_creator = model_creator_fn
         self.attack_strategy = attack_strategy
         # List of attack models
         self.attack_models: Dict[ClassifierMixin] = {}
+        self.random_state = kwargs.get('random_state')
 
     def fit(self, attack_dataset: DataFrame, compute_reports=True) -> None:
         """Fits the attack datasets to predict if the record is inside or outside.
