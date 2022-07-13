@@ -154,15 +154,39 @@ class AttackModelsManager:
         # List of predicted outputs
         y_pred_list: List[ndarray] = []
         # Iterates through all the labels
-        for label, label_df in data.groupby("label", sort=False):
+        # TODO aggiustare per quando ho solo un attack model
+        if self.attack_strategy == AttackStrategy.ONE_PER_LABEL:
+            for label, label_df in data.groupby("label", sort=False):
+                # Path of the current attack model
+                path: str = f"{self.results_path}/{label}"
+                # Get the model for the specific label
+                model: ClassifierMixin = self.attack_models[label]
+                # Input data
+                x: ndarray = label_df.drop(columns=["label", "inout"]).values
+                # Label to be predicted, "in" or "out"
+                y_true: ndarray = label_df["inout"].values
+                # Prediction of the model
+                y_pred: ndarray = model.predict(x)
+                # create the Classification report and save it on a file.
+                report: str = classification_report(y_true, y_pred)
+                save_txt(f"{path}/test_single_{name}.txt", report)
+                # Updates the list
+                y_true_list.append(y_true)
+                y_pred_list.append(y_pred)
+            # Concatenates the predictions to get an overall report and save it on a file.
+            y_true: ndarray = concatenate(y_true_list)
+            y_pred: ndarray = concatenate(y_pred_list)
+            report: str = classification_report(y_true, y_pred)
+            save_txt(f"{self.results_path}/test_single_concat_{name}.txt", report)
+        elif self.attack_strategy == AttackStrategy.ONE:
             # Path of the current attack model
-            path: str = f"{self.results_path}/{label}"
+            path: str = f"{self.results_path}/one_attack"
             # Get the model for the specific label
-            model: ClassifierMixin = self.attack_models[label]
+            model: ClassifierMixin = self.attack_models["only_one"]
             # Input data
-            x: ndarray = label_df.drop(columns=["label", "inout"]).values
+            x: ndarray = data.drop(columns=["label", "inout"]).values
             # Label to be predicted, "in" or "out"
-            y_true: ndarray = label_df["inout"].values
+            y_true: ndarray = data["inout"].values
             # Prediction of the model
             y_pred: ndarray = model.predict(x)
             # create the Classification report and save it on a file.
@@ -171,11 +195,11 @@ class AttackModelsManager:
             # Updates the list
             y_true_list.append(y_true)
             y_pred_list.append(y_pred)
-        # Concatenates the predictions to get an overall report and save it on a file.
-        y_true: ndarray = concatenate(y_true_list)
-        y_pred: ndarray = concatenate(y_pred_list)
-        report: str = classification_report(y_true, y_pred)
-        save_txt(f"{self.results_path}/test_single_concat_{name}.txt", report)
+            # Concatenates the predictions to get an overall report and save it on a file.
+            y_true: ndarray = concatenate(y_true_list)
+            y_pred: ndarray = concatenate(y_pred_list)
+            report: str = classification_report(y_true, y_pred)
+            save_txt(f"{self.results_path}/test_single_concat_{name}.txt", report)
 
     def __test_all(self, data: DataFrame,
                    name: str):  # TODO scrivere che test fa ed effetti collaterali (crea dei file)
