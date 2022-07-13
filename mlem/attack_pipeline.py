@@ -187,7 +187,7 @@ def perform_attack_pipeline(
     # Creates the shadow models path
     os.makedirs(black_box_path, exist_ok=True)
     # Saves the local model on disk
-    print(f"saving local model for {idx} in {black_box_path}/model.pkl.bz2")
+    # print(f"saving local model for {idx} in {black_box_path}/model.pkl.bz2")
     save_pickle_bz2(f"{black_box_path}/model.pkl.bz2", local_model)
 
     if type(explainer) is LimeTabularExplainer:
