@@ -81,7 +81,7 @@ class ShadowModelsManager:
         for i in range(self.__n_models):
             # Train-test splitting
             x_train, x_test, y_train, y_test = train_test_split(
-                x, y, test_size=self.test_size
+                x, y, test_size=self.test_size, stratify=y, train_size=0.6
             )
             # Oversampling of the minority classes
 
