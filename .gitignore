@@ -157,3 +157,6 @@ cython_debug/
 #.idea/
 
 .pytest_cache/
+
+# Do not upload on github the experiment results
+./experiments/experiments_results
