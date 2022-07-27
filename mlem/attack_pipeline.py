@@ -2,7 +2,10 @@
 This module contains the pipeline used to perform an attack on a model.
 """
 import os
+from pathlib import Path
 from typing import Any, List, Sequence, Tuple, Union
+
+import numpy as np
 from numpy import ndarray, delete
 from numpy.lib.npyio import savez_compressed
 from pandas.core.frame import DataFrame
@@ -13,7 +16,8 @@ from mlem.enumerators import SamplingTechnique
 from mlem.black_box import BlackBox
 from mlem.explainer import LoreDTLoader
 from mlem.shadow_models import ShadowModelsManager
-from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest
+from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest, \
+    create_dataset_for_attack
 import time
 
 import logging
@@ -169,16 +173,24 @@ def perform_attack_pipeline(
     if local_attack_dataset is not None:
         x_attack = local_attack_dataset
         y_attack = local_model.predict(x_attack)
+
+        x_attack = create_dataset_for_attack(x_neigh, black_box, local_attack_dataset, 5000)
+        y_attack = local_model.predict(x_attack)
+
+        _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
+        print(f"LOCAL_1_DISTR = {_ones_distr}%")
+
     elif neighborhood_sampling == SamplingTechnique.SAME:
         x_attack = x_neigh
         y_attack = y_neigh
+
     else:
         x_attack = __generate_neighborhood(
             instance=x, explainer=explainer, num_samples=num_samples, sampling_method=neighborhood_sampling
         )
         y_attack = black_box.predict(x_attack)
 
-    # TODO controllare quese due righe
+    # TODO controllare queste due righe
     # Prediction probability on neighborhood
     y_prob: ndarray = black_box.predict_proba(x_attack)
     # Attack dataset created on the neighborhood #qui solo (y_prob, y_attack, "in")

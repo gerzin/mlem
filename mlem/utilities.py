@@ -403,3 +403,72 @@ def split_probs_array(arr):
     for c in range(n_classes):
         separated.append(arr[max_index_row == c])
     return separated
+
+
+def compute_centroids(data: np.ndarray, axis=0):
+    """
+    Returns the centroid of a matrix.
+    Args:
+        data: matrix
+        axis: axis along which compute the centroid
+    Returns:
+
+    """
+    return data.mean(axis=axis)
+
+
+ADULT_COLUMN_MASK = np.array([int(x) == 1 for x in "1,0,1,0,1,0,0,0,0,0,1,1,1,0".split(",")])
+
+
+def create_dataset_for_attack(dataset, black_box, noisy_set, num_samples, column_mask=ADULT_COLUMN_MASK,
+                              use_threshold=False):
+    df = pd.DataFrame(dataset)
+    df['Label'] = black_box.predict(df.to_numpy())
+
+    ones = df[df['Label'] == 1].copy()
+    zeroes = df[df['Label'] == 0].copy()
+    if len(ones) == 0:
+        raise Exception("Missing label == 1")
+    elif len(zeroes) == 0:
+        raise Exception("Missing label == 0")
+
+    centroid_0 = compute_centroids(zeroes.drop('Label', axis=1).to_numpy()[:, column_mask])
+    centroid_1 = compute_centroids(ones.drop('Label', axis=1).to_numpy()[:, column_mask])
+
+    centroid_0_dist = distance.cdist(df.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+                                     np.array([centroid_0]))
+    centroid_1_dist = distance.cdist(df.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+                                     np.array([centroid_1]))
+
+    df_dist = np.minimum(centroid_0_dist, centroid_1_dist)
+
+    df['Dist'] = df_dist
+    df_mean = df.Dist.mean()
+    df_std = df.Dist.std()
+    alpha = 1
+
+    threshold = df_mean + alpha * df_std
+
+    df_noise = pd.DataFrame(noisy_set)
+    df_noise['Label'] = black_box.predict(df_noise.to_numpy())
+
+    centroid_0_dist_noise = distance.cdist(df_noise.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+                                           np.array([centroid_0]))
+
+    centroid_1_dist_noise = distance.cdist(df_noise.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+                                           np.array([centroid_1]))
+
+    df_noise['Dist'] = np.minimum(centroid_0_dist_noise, centroid_1_dist_noise)
+
+    # zeroes['Dist'] = distance.cdist(zeroes.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+    #                                np.array([centroid_0]))
+    # ones['Dist'] = distance.cdist(ones.drop(labels=['Label'], axis=1).to_numpy()[:, column_mask],
+    #                              np.array([centroid_1]))
+
+    # prendi i k più vicini o quelli ad una certa threshold (avg + 1 std)
+    # per la distanza senza che separo in 0 e 1
+
+    if use_threshold:
+        return df_noise[df_noise.Dist <= threshold].drop(['Label', 'Dist'], axis=1).to_numpy()
+    else:
+        return df_noise.sort_values('Dist').drop(['Label', 'Dist'], axis=1).head(num_samples).to_numpy()
