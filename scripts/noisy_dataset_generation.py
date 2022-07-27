@@ -1,36 +1,78 @@
 #!/usr/bin/env python3
+
+from typing import List, Callable
 import pandas as pd
 import pickle
 import numpy as np
+from numpy import array
 import argparse
+from pathlib import Path
 
-HOMEDIR = "../Location30/"
-mode = "Location"
-class_name = "profile"  # Indica la variabile target?
-perc = 5
-filename: str = f"{HOMEDIR}data/{mode}_shadow.csv"
-dataset_shadow = pd.read_csv(filename, index_col=0)
-dataset_shadow.pop(class_name)
-dataset_shadow.pop('UserID')
 
-n_rows = dataset_shadow.shape[0]
-n_col = dataset_shadow.shape[1]
-new_df = pd.DataFrame()
+def insert_noise_numerical(dataset: pd.DataFrame, perc: float = 0.1,
+                           noise_generating_function: Callable[[int], array] = np.random.normal):
+    """
+    Insert noise in a numerical dataset.
 
-percentage = int((perc / float(100)) * n_rows)  # Posso portarlo fuori dal loop?
-for c in range(n_col):
-    index_to_replace = np.random.choice(dataset_shadow.index, size=percentage)
-    new_values = np.random.rand(percentage)
-    for i in range(0, len(index_to_replace)):
-        dataset_shadow.iloc[i, c] = new_values[i]
+    Args:
+        dataset (DataFrame): dataset on which to insert the noise.
+        perc (float): percentage of noise in the range [0,1]
+        noise_generating_function (Callable[[int], array]): function used to generate the noise, must take as input the number of noisy values to
+                                   generate inside an argument named size and return an array containing the random values.
 
-filename: str = f"{HOMEDIR}data/{mode}_noise_shadow.csv"
-# dataset_shadow.to_csv(filename)
-f = open(filename, 'wb')
-pickle.dump(dataset_shadow, f)
-f.close()
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Insert noise inside a dataset.')
-    parser.add_argument('dataset', metavar='DATASET', type=str, nargs=1, required=True,
-                        help='an integer for the accumulator')
+    Examples:
+
+        >>> df = pd.DataFrame(data={'col1': 10 * [1], 'col2': 10 * [2], 'col3': 10 * [3]})
+        >>> insert_noise(df, perc=0.1, noise_generating_function=np.random.rand) # note np.random.rand has a size parameter
+
+    """
+    n_rows, n_col = dataset.shape
+    percentage = int(perc * n_rows)
+
+    for c in range(n_col):
+        index_to_replace = np.random.choice(dataset.index,
+                                            size=percentage)
+        new_values = noise_generating_function(size=percentage)
+        assert (len(index_to_replace) == len(new_values))
+        for ind, val in zip(index_to_replace, new_values):
+            dataset.iloc[ind, c] = val
+
+
+def frequency_based_noise(column, size):
+    """
+    Sample values from a column with replacement.
+
+    Args:
+        column: column to sample from
+        size: number of elements to sample
+
+    Returns:
+        Array of samples
+    """
+    return column.sample(size, replace=True).to_numpy()
+
+
+def insert_noise_categorical(dataset: pd.DataFrame, perc: float = 0.1,
+                             noise_generating_function: Callable[[pd.Series, int], array] = frequency_based_noise):
+    """
+
+    Args:
+        dataset (DataFrame): dataset on which to insert the noise ( it should only contain categorical variables )
+        perc (float): percentage of noise in the range [0,1]
+       noise_generating_function (Callable[[int], array]): function used to generate the noise, must take as input the number of noisy values to
+                                   generate inside an argument named size and return an array containing the random values.
+
+    Returns:
+
+    """
+    n_rows, n_col = dataset.shape
+    percentage = int(perc * n_rows)
+
+    for c in range(n_col):
+        index_to_replace = np.random.choice(dataset.index,
+                                            size=percentage)
+        new_values = noise_generating_function(dataset[dataset.columns[c]], size=percentage)
+        assert (len(index_to_replace) == len(new_values))
+        for ind, val in zip(index_to_replace, new_values):
+            dataset.iloc[ind, c] = val
