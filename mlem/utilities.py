@@ -19,6 +19,7 @@ from sklearn.model_selection import HalvingGridSearchCV
 import pandas as pd
 import scipy.spatial.distance as distance
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
+from imblearn.over_sampling import SMOTENC, SMOTE
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -472,3 +473,29 @@ def create_dataset_for_attack(dataset, black_box, noisy_set, num_samples, column
         return df_noise[df_noise.Dist <= threshold].drop(['Label', 'Dist'], axis=1).to_numpy()
     else:
         return df_noise.sort_values('Dist').drop(['Label', 'Dist'], axis=1).head(num_samples).to_numpy()
+
+
+def oversample(x, y, categorical_mask, random_state=123):
+    """
+    https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
+    """
+    nelems = len(y)
+    assert len(x) == nelems
+
+    sampling_strategy = "minority"
+
+    uniqcls = np.unique(y)
+    # {class: %}
+    classes_perc = {}
+    for c in uniqcls:
+        perc = sum([x == c for x in y]) / len(y)
+        classes_perc[c] = perc
+    # class of min. percentage
+    minority_class_value = min(classes_perc.values())
+    minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
+
+    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state)
+
+    X_new, y_new = oversampler.fit_resample(x, y)
+
+    return X_new, y_new

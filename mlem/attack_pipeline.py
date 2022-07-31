@@ -17,7 +17,7 @@ from mlem.black_box import BlackBox
 from mlem.explainer import LoreDTLoader
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest, \
-    create_dataset_for_attack
+    create_dataset_for_attack, oversample
 import time
 
 import logging
@@ -116,7 +116,8 @@ def perform_attack_pipeline(
         random_state: int,
         local_attack_dataset: ndarray = None,
         model_creator_fn=create_random_forest,
-        attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL
+        attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL,
+        **kwargs
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -141,6 +142,8 @@ def perform_attack_pipeline(
         random_state: seed of random number generators.
         local_attack_dataset: dataset to label with the local model and use for the creation of the shadow models. (default None)
         attack_strategy: how to build the attack models, default one for each label
+    Keyword Args:
+        categorical_mask (bool list): The entry is True if the corresponding feature is categorical else False. (by default it considers all features as numerical)
 
     Returns:
 
@@ -162,6 +165,10 @@ def perform_attack_pipeline(
         # load the local model
         local_model = explainer.load(index=idx)
 
+    # categorical mask
+    categorical_mask = kwargs.get("categorical_mask", [False for _ in range(len(x))])
+    assert all([type(x) is bool for x in categorical_mask])
+
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
     # Path where to save the black box and its data
@@ -177,18 +184,21 @@ def perform_attack_pipeline(
         x_attack = create_dataset_for_attack(x_neigh, black_box, local_attack_dataset, 5000)
         y_attack = local_model.predict(x_attack)
 
-        _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
-        print(f"LOCAL_1_DISTR = {_ones_distr}%")
-
     elif neighborhood_sampling == SamplingTechnique.SAME:
         x_attack = x_neigh
         y_attack = y_neigh
 
     else:
+        print("[INFO] Using LIME's generated version")
         x_attack = __generate_neighborhood(
             instance=x, explainer=explainer, num_samples=num_samples, sampling_method=neighborhood_sampling
         )
         y_attack = black_box.predict(x_attack)
+        _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
+        print(f"GENERATED = {1 - _ones_distr} {_ones_distr}%")
+        x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
+        _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
+        print(f"GENERATED AFTER OVERSAMPLING = {1 - _ones_distr} {_ones_distr}%")
 
     # TODO controllare queste due righe
     # Prediction probability on neighborhood
@@ -212,7 +222,8 @@ def perform_attack_pipeline(
         results_path=f"{path}/shadow",
         test_size=test_size,
         random_state=random_state,
-        model_creator_fn=model_creator_fn
+        model_creator_fn=model_creator_fn,
+        categorical_mask=categorical_mask
     )
     # Fits the shadow models to imitate the black boxes.
 

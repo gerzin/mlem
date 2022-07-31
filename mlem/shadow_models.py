@@ -7,7 +7,7 @@ from pandas import DataFrame, concat
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-from imblearn.over_sampling import SMOTE, RandomOverSampler
+from imblearn.over_sampling import SMOTE, SMOTENC
 
 from mlem.utilities import (
     create_attack_dataset,
@@ -27,7 +27,7 @@ class ShadowModelsManager:
 
     def __init__(
             self, n_models: int, results_path: str, test_size: float, random_state: int,
-            model_creator_fn: Callable = create_random_forest
+            model_creator_fn: Callable = create_random_forest, **kwargs
     ) -> None:
         """Creates a new Shadow Models Manager.
 
@@ -37,6 +37,8 @@ class ShadowModelsManager:
             test_size (float): Size of the test for the splitting.
             random_state (int): Seed of random number generators.
             model_creator_fn (Callable): function that returns a fitted model on x,y.
+        Keyword Args:
+            categorical_mask
         """
 
         self.__n_models = n_models
@@ -46,8 +48,13 @@ class ShadowModelsManager:
         os.makedirs(results_path, exist_ok=True)
         # logger.debug(f"RESULTS PATH CREATED: {results_path}")
 
+        categorical_mask = kwargs.get("categorical_mask", None)
+
         # SMOTE oversampler
-        self.oversampler = SMOTE(random_state=random_state)
+        self.oversampler = SMOTENC(categorical_mask, sampling_strategy="minority",
+                                   random_state=random_state) if (categorical_mask is not None) and any(
+            categorical_mask) else SMOTE(
+            random_state=random_state)
         self.model_creator = model_creator_fn
         self.attack_dataset = None  # set in self.fit
 
