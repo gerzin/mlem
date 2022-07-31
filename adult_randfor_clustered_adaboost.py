@@ -213,7 +213,20 @@ def main(
     else:
         assert type(n_rows) is int
         echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_test_clustered)}")
-
+    ADULT_CATEGORICAL_FEATURES_MASK = [False,
+                                       True,
+                                       False,
+                                       True,
+                                       False,
+                                       True,
+                                       True,
+                                       True,
+                                       True,
+                                       True,
+                                       False,
+                                       False,
+                                       False,
+                                       True]
     echo(f"Starting Parallel with {n_jobs=} and {batch_size=} using AdaBoost")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
@@ -235,7 +248,9 @@ def main(
                 random_state,
                 local_attack_dataset,
                 create_adaboost,
-                AttackStrategy.ONE_PER_LABEL
+                AttackStrategy.ONE_PER_LABEL,
+                categorical_mask=ADULT_CATEGORICAL_FEATURES_MASK,
+                ciao=123
             )
             for idx, x_row, y_row in zip(indices[:n_rows], x_test_clustered[:n_rows], y_test_clustered[:n_rows])
         )
