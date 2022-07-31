@@ -189,14 +189,19 @@ def perform_attack_pipeline(
         y_attack = y_neigh
 
     else:
-        print("[INFO] Using LIME's generated version")
         x_attack = __generate_neighborhood(
             instance=x, explainer=explainer, num_samples=num_samples, sampling_method=neighborhood_sampling
         )
         y_attack = black_box.predict(x_attack)
+        assert len(np.unique(y_attack)) > 1
         _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
         print(f"GENERATED = {1 - _ones_distr} {_ones_distr}%")
+        print()
+        print(x_attack)
+        print(y_attack)
+        print()
         x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
+
         _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
         print(f"GENERATED AFTER OVERSAMPLING = {1 - _ones_distr} {_ones_distr}%")
 
