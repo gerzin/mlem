@@ -164,7 +164,9 @@ def perform_attack_pipeline(
     elif type(explainer) is LoreDTLoader:
         # load the local model
         local_model = explainer.load(index=idx)
-
+    print("KWARGS")
+    for k, i in kwargs.items():
+        print(f"{k=}\n{i=}")
     categorical_mask = kwargs.get("categorical_mask", [False for _ in range(len(x))])
     assert all([type(x) is bool for x in categorical_mask])
 
