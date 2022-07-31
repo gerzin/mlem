@@ -482,7 +482,7 @@ def oversample(x, y, categorical_mask, random_state=123):
     nelems = len(y)
     assert len(x) == nelems
 
-    print(f"{nelems=}\n{x=}\n{y=}\n{categorical_mask=}")
+    print(f"{categorical_mask=}")
 
     sampling_strategy = "minority"
 
