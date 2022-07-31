@@ -496,7 +496,8 @@ def oversample(x, y, categorical_mask, random_state=123):
     minority_class_value = min(classes_perc.values())
     minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
 
-    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state)
+    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state) if any(
+        categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, random_state=random_state)
     print(f"{x.shape=}\n{y.shape=}")
     X_new, y_new = oversampler.fit_resample(x, y)
 

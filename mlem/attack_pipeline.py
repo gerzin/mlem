@@ -117,7 +117,7 @@ def perform_attack_pipeline(
         local_attack_dataset: ndarray = None,
         model_creator_fn=create_random_forest,
         attack_strategy: AttackStrategy = AttackStrategy.ONE_PER_LABEL,
-        **kwargs
+        categotical_mask: List = None
 ):
     """
     Execute the MIA Attack with a Local Explainer model on an instance.
@@ -166,10 +166,10 @@ def perform_attack_pipeline(
         local_model = explainer.load(index=idx)
 
     # categorical mask
-    categorical_mask = kwargs.get("categorical_mask", [False for _ in range(len(x))])
+    if categotical_mask is None:
+        categorical_mask = [False for _ in range(len(x))]
+
     assert all([type(x) is bool for x in categorical_mask])
-    if kwargs.get("categorical_mask") is None:
-        raise ValueError("Catmask is none")
 
     # Path of the current attacked object
     path: str = f"{results_path}/{idx}"
