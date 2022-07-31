@@ -482,7 +482,7 @@ def oversample(x, y, categorical_mask, random_state=123):
     nelems = len(y)
     assert len(x) == nelems
 
-    print(f"{nelems=}\n{x=}\n{y=}\n{categorical_mask=})")
+    print(f"{nelems=}\n{x=}\n{y=}\n{categorical_mask=}")
 
     sampling_strategy = "minority"
 
@@ -497,7 +497,7 @@ def oversample(x, y, categorical_mask, random_state=123):
     minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
 
     oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state)
-
+    print(f"{x.shape=}\n{y.shape=}")
     X_new, y_new = oversampler.fit_resample(x, y)
 
     return X_new, y_new
