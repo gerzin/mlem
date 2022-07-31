@@ -167,6 +167,7 @@ def perform_attack_pipeline(
     print("KWARGS")
     for k, i in kwargs.items():
         print(f"{k=}\n{i=}")
+    print("NO_KWARGS")
     categorical_mask = kwargs.get("categorical_mask", [False for _ in range(len(x))])
     assert all([type(x) is bool for x in categorical_mask])
 
