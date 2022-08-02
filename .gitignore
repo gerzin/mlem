@@ -160,3 +160,6 @@ cython_debug/
 
 # Do not upload on github the experiment results
 ./experiments/experiments_results
+/blackboxes/noclustering/Untitled.ipynb
+
+./toignore
