@@ -193,9 +193,9 @@ def perform_attack_pipeline(
         )
         y_attack = black_box.predict(x_attack)
         assert len(np.unique(y_attack)) > 1
-        _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
-        print(f"GENERATED BEF. OVERS = {1 - _ones_distr} {_ones_distr}%")
-        x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
+        # _ones_distr = sum([y == 1 for y in y_attack]) / len(y_attack)
+        # print(f"GENERATED BEF. OVERS = {1 - _ones_distr} {_ones_distr}%")
+        # x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
 
     # TODO controllare queste due righe
     # Prediction probability on neighborhood
