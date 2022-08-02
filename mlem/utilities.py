@@ -502,3 +502,21 @@ def oversample(x, y, categorical_mask, random_state=123):
     X_new, y_new = oversampler.fit_resample(x, y)
 
     return X_new, y_new
+
+
+def print_label_distr(y_tr, y_te, lab):
+    lab_tr, count_tr = np.unique(y_tr, return_counts=True)
+    lab_te, count_te = np.unique(y_te, return_counts=True)
+
+    freq_tr = count_tr / count_tr.sum()
+    freq_te = count_te / count_te.sum()
+
+    assert freq_tr.sum() > 0.999 and freq_te.sum() > 0.999
+    sep = "* " * 14
+    print(f"[INFO] AttackModel Label {lab}:\n{sep}")
+    for l, f in zip(lab_tr, freq_tr):
+        print(f"* [TRAIN] lab={l} freq={f:.2} *")
+    print(sep)
+    for l, f in zip(lab_te, freq_te):
+        print(f"* [TEST ] lab={l} freq={f:.2} *")
+    print(sep)

@@ -14,10 +14,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.base import ClassifierMixin
 from typing import Callable
-from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt
+from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt, print_label_distr
 
 
 class AttackStrategy(Enum):
+    """
+    Attack Strategy for the AttackModelManager
+
+    ONE: Create only 1 attack model and use it for all the labels.
+    ONE_PER_LABER: For each label create 1 attack model.
+    """
     # create one attack model and use it for all the labels
     ONE = "one",
     # create one attack model for each label
@@ -71,6 +77,8 @@ class AttackModelsManager:
                 x_train, x_test, y_train, y_test = train_test_split(
                     x, y, random_state=self.random_state, stratify=y
                 )
+                # TODO remove these
+                print_label_distr(y_train, y_test)
                 # Saves the input data
                 savez_compressed(
                     f"{path_label_attack}/data",
@@ -237,7 +245,7 @@ class AttackModelsManager:
         self.__test_all(data, name)
 
 
-def dump_classification_reports__(attack_model, x_train, x_test, y_train, y_test, base_path):
+def dump_classification_reports__(attack_model, x_train, x_test, y_train, y_test, base_path, print_it=False):
     """
     Computes and dumps the classification report of the attack model on its own training and test data
 
@@ -248,6 +256,7 @@ def dump_classification_reports__(attack_model, x_train, x_test, y_train, y_test
         y_train: true target of the train set
         y_test: true target of the test set
         base_path: base of the path where to store the reports
+        print_it: if True prints the classification report on the stdout
 
     Returns:
 
@@ -261,3 +270,9 @@ def dump_classification_reports__(attack_model, x_train, x_test, y_train, y_test
     base_path = Path(base_path)
     save_txt(base_path / "report_train.txt", report_train)
     save_txt(base_path / "report_test.txt", report_test)
+
+    if print_it:
+        print("************ REPORT TRAIN ***************")
+        print(report_train)
+        print("************ REPORT TEST ***************")
+        print(report_test)
