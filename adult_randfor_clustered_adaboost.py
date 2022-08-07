@@ -250,7 +250,6 @@ def main(
                 create_adaboost,
                 AttackStrategy.ONE_PER_LABEL,
                 categorical_mask=ADULT_CATEGORICAL_FEATURES_MASK,
-                ciao=123
             )
             for idx, x_row, y_row in zip(indices[:n_rows], x_test_clustered[:n_rows], y_test_clustered[:n_rows])
         )
