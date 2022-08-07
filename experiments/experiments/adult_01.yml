@@ -1,0 +1,17 @@
+dataset:
+  - name: adult
+  - infos: "{}"
+  - features_columns: "{}"
+  - target_column: "{}"
+  - train_test_validation_archive_path: "{}"
+
+black_box:
+  - path: "{}"
+  - info: "{}"
+
+experiment:
+  - description: "{}"
+  # the name of the folder containing the output results, to this name will be prepended experiment_results
+  - results_path: "{}"
+  - n_rows: "{}"
+  - local_attack_dataset_path: "{}"
