@@ -183,7 +183,8 @@ def perform_attack_pipeline(
         y_attack = local_model.predict(x_attack)
         x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
         d_0, d_1 = get_labels_distr(y_attack)
-        f"[INFO] Generated stat. attack dataset of size {len(y_attack)} | label dis after oversampling {d_0:.2f}%/{d_1:.2f}%"
+        print(
+            f"[INFO] Generated stat. attack dataset of size {len(y_attack)} | label dis after oversampling {d_0:.2f}%/{d_1:.2f}%")
 
     elif neighborhood_sampling == SamplingTechnique.SAME:
         statistical_generation = kwargs.get('statistical_generation', False)
