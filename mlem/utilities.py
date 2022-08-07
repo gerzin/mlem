@@ -459,7 +459,6 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     df_lime[target_column_name] = lime_y
     # Select only numerical columns
     numerical_columns = [col for (col, cat_mask) in zip(df_lime.columns[:-1], categorical_mask) if cat_mask == False]
-    print(f"{numerical_columns=}")
 
     df_lime_numerical = df_lime[numerical_columns + [target_column_name]]
 
