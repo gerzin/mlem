@@ -20,6 +20,7 @@ import pandas as pd
 import scipy.spatial.distance as distance
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 from imblearn.over_sampling import SMOTENC, SMOTE
+from sklearn.mixture import GaussianMixture
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -458,7 +459,7 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     assert len(categorical_mask) == lime_x.shape[1]
     df_lime[target_column_name] = lime_y
     # Select only numerical columns
-    numerical_columns = [col for (col, cat_mask) in zip(df_lime.columns[:-1], categorical_mask) if cat_mask == False]
+    numerical_columns = [col for (col, cat_mask) in zip(df_lime.columns[:-1], categorical_mask) if cat_mask is False]
 
     df_lime_numerical = df_lime[numerical_columns + [target_column_name]]
 
@@ -536,6 +537,20 @@ def oversample(x, y, categorical_mask, random_state=123):
     return X_new, y_new
 
 
+def get_labels_distr(y):
+    """
+    Returns the label distrbution.
+    Args:
+        y: array containing the labels
+
+    Returns:
+
+    """
+    unique, counts = np.unique(y, return_counts=True)
+    print(unique)
+    return np.array([x / len(y) for x in counts])
+
+
 def print_label_distr(y_tr, y_te, lab):
     lab_tr, count_tr = np.unique(y_tr, return_counts=True)
     lab_te, count_te = np.unique(y_te, return_counts=True)
@@ -552,3 +567,10 @@ def print_label_distr(y_tr, y_te, lab):
     for l, f in zip(lab_te, freq_te):
         print(f"* [TEST ] lab={l} freq={f:.2} *")
     print(sep)
+
+
+# TODO: How to determine n_samples? How to handle categorical attributes?
+def stat_sample_dataset(x_train, n_samples=8000):
+    gm = GaussianMixture(n_components=3, random_state=123).fit(x_train)
+    stat_dataset = gm.sample(n_samples=n_samples)
+    return stat_dataset
