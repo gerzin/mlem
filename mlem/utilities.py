@@ -547,7 +547,6 @@ def get_labels_distr(y):
 
     """
     unique, counts = np.unique(y, return_counts=True)
-    print(unique)
     return np.array([x / len(y) for x in counts])
 
 
