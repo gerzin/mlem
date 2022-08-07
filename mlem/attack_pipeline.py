@@ -17,7 +17,7 @@ from mlem.black_box import BlackBox
 from mlem.explainer import LoreDTLoader
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest, \
-    create_dataset_for_attack, oversample
+    create_attack_dataset_from_lime_centroids
 import time
 
 import logging
@@ -178,9 +178,8 @@ def perform_attack_pipeline(
     y_attack: ndarray = None
     if local_attack_dataset is not None:
         x_attack = local_attack_dataset
-        y_attack = local_model.predict(x_attack)
-
-        x_attack = create_dataset_for_attack(x_neigh, black_box, local_attack_dataset, 5000)
+        # y_attack = local_model.predict(x_attack)
+        x_attack = create_attack_dataset_from_lime_centroids(x_neigh, y_neigh, x_attack, black_box, categorical_mask)
         y_attack = local_model.predict(x_attack)
 
     elif neighborhood_sampling == SamplingTechnique.SAME:
@@ -253,9 +252,10 @@ def perform_attack_pipeline(
 
 def get_duration_(start):
     """
+    Returns a string containing the time in minutes and seconds elapsed since the time passed as argument.
 
     Args:
-        start:
+        start: Start time from which to compute the time difference.
 
     Returns:
         string of the format "{minutes}:{seconds}m"
