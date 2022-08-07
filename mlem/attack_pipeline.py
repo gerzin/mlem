@@ -17,7 +17,7 @@ from mlem.black_box import BlackBox
 from mlem.explainer import LoreDTLoader
 from mlem.shadow_models import ShadowModelsManager
 from mlem.utilities import create_attack_dataset, save_pickle_bz2, save_txt, create_random_forest, \
-    create_attack_dataset_from_lime_centroids, stat_sample_dataset, get_labels_distr
+    create_attack_dataset_from_lime_centroids, stat_sample_dataset, get_labels_distr, oversample
 import time
 
 import logging
@@ -181,6 +181,9 @@ def perform_attack_pipeline(
         # y_attack = local_model.predict(x_attack)
         x_attack = create_attack_dataset_from_lime_centroids(x_neigh, y_neigh, x_attack, black_box, categorical_mask)
         y_attack = local_model.predict(x_attack)
+        x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
+        d_0, d_1 = get_labels_distr(y_attack)
+        f"[INFO] Generated stat. attack dataset of size {len(y_attack)} | label dis after oversampling {d_0:.2f}%/{d_1:.2f}%"
 
     elif neighborhood_sampling == SamplingTechnique.SAME:
         statistical_generation = kwargs.get('statistical_generation', False)

@@ -504,7 +504,7 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     assert len(final_elems) == (len(noisy_0_closest) + len(noisy_1_closest))
     distr = final_elems[target_column_name].value_counts(normalize=True)
     print(
-        f"[INFO] Selected closest elements to centroids. Tot elem {len(final_elems)} | 0/1 = {distr[0]:.2f}%/{distr[1]:.2f}%")
+        f"[INFO] Selected closest elements to centroids. Tot elem {len(final_elems)} | 0/1 (by bb)= {distr[0]:.2f}%/{distr[1]:.2f}%")
     return final_elems.drop(target_column_name, axis=1).to_numpy()
 
 
@@ -519,15 +519,15 @@ def oversample(x, y, categorical_mask, random_state=123):
 
     sampling_strategy = "minority"
 
-    uniqcls = np.unique(y)
+    # uniqcls = np.unique(y)
     # {class: %}
-    classes_perc = {}
-    for c in uniqcls:
-        perc = sum([x == c for x in y]) / len(y)
-        classes_perc[c] = perc
+    # classes_perc = {}
+    # for c in uniqcls:
+    #    perc = sum([x == c for x in y]) / len(y)
+    #    classes_perc[c] = perc
     # class of min. percentage
-    minority_class_value = min(classes_perc.values())
-    minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
+    # minority_class_value = min(classes_perc.values())
+    # minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
 
     oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state) if any(
         categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, random_state=random_state)
