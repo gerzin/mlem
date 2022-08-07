@@ -572,4 +572,4 @@ def print_label_distr(y_tr, y_te, lab):
 def stat_sample_dataset(x_train, n_samples=8000):
     gm = GaussianMixture(n_components=3, random_state=123).fit(x_train)
     stat_dataset = gm.sample(n_samples=n_samples)
-    return stat_dataset
+    return stat_dataset[0]
