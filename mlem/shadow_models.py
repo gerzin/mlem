@@ -93,11 +93,11 @@ class ShadowModelsManager:
             # Oversampling of the minority classes
 
             # smote requires a minimum of samples for each class
-            min_freq = min(frequencies(y_train), key=lambda el: el[1])
-            while min_freq[1] < 10:
-                x_train, y_train = minority_class_resample(x_train, y_train, 11)
-                # frequencies of the labels
-                min_freq = min(frequencies(y_train), key=lambda el: el[1])
+            # min_freq = min(frequencies(y_train), key=lambda el: el[1])
+            # while min_freq[1] < 10:
+            #    x_train, y_train = minority_class_resample(x_train, y_train, 11)
+            #    # frequencies of the labels
+            #    min_freq = min(frequencies(y_train), key=lambda el: el[1])
 
             # SMOTE oversampling
             x_train, y_train = self.oversampler.fit_resample(x_train, y_train)

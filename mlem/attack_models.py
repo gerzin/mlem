@@ -77,8 +77,8 @@ class AttackModelsManager:
                 x_train, x_test, y_train, y_test = train_test_split(
                     x, y, random_state=self.random_state, stratify=y
                 )
-                # TODO remove these
-                print_label_distr(y_train, y_test, label)
+
+                # print_label_distr(y_train, y_test, label)
                 # Saves the input data
                 savez_compressed(
                     f"{path_label_attack}/data",

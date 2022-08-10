@@ -196,6 +196,8 @@ def perform_attack_pipeline(
         else:
             x_attack = x_neigh
             y_attack = y_neigh
+            d_0, d_1 = get_labels_distr(y_attack)
+            print(f"[INFO] Using Lime's dataset of size {len(y_attack)} | label dis {d_0:.2f}%/{d_1:.2f}%")
 
     else:
         x_attack = __generate_neighborhood(
