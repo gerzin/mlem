@@ -582,7 +582,7 @@ def stat_sample_dataset(x_train, n_samples=8000, n_components_method="gridsearch
     Returns:
 
     """
-    tuned_parameters = {'n_components': np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 'random_state': 123}
+    tuned_parameters = {'n_components': np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 'random_state': [123]}
     clf = GridSearchCV(GaussianMixture(), tuned_parameters, cv=2)
     clf.fit(x_train)
     gm = clf.best_estimator_
