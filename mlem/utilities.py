@@ -15,7 +15,7 @@ from numpy.lib.arraysetops import unique
 from sklearn.utils import resample
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.experimental import enable_halving_search_cv
-from sklearn.model_selection import HalvingGridSearchCV
+from sklearn.model_selection import HalvingGridSearchCV, GridSearchCV
 import pandas as pd
 import scipy.spatial.distance as distance
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
@@ -568,8 +568,23 @@ def print_label_distr(y_tr, y_te, lab):
     print(sep)
 
 
-# TODO: How to determine n_samples? How to handle categorical attributes?
-def stat_sample_dataset(x_train, n_samples=8000):
-    gm = GaussianMixture(n_components=3, random_state=123).fit(x_train)
+def stat_sample_dataset(x_train, n_samples=8000, n_components_method="gridsearch"):
+    """
+    Generate a new statistical dataset using GaussianMixtures.
+
+    The number of components of the Gaussian Mixture is found using a gridsearch with n in [1,12]
+    Args:
+        x_train: train dataset
+        n_samples: number of samples to generate
+        n_components_method: method used to determine the number of components of the GaussianMixture.
+                             For now the only supported one is gridsearch
+
+    Returns:
+
+    """
+    tuned_parameters = {'n_components': np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 'random_state': 123}
+    clf = GridSearchCV(GaussianMixture(), tuned_parameters, cv=2)
+    clf.fit(x_train)
+    gm = clf.best_estimator_
     stat_dataset = gm.sample(n_samples=n_samples)
     return stat_dataset[0]
