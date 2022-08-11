@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.base import ClassifierMixin
 from typing import Callable
-from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt, print_label_distr
+from mlem.utilities import create_random_forest, save_pickle_bz2, save_txt, print_label_distr, oversample
 
 
 class AttackStrategy(Enum):
@@ -72,8 +72,8 @@ class AttackModelsManager:
                 os.makedirs(path_label_attack, exist_ok=True)
                 # Splits the dataset into train and test
 
-                # FIXME: here I got ValueError: The least populated class in y has only 1 member, which is too few.
-                #  The minimum number of groups for any class cannot be less than 2
+                x, y = oversample(x, y)
+
                 x_train, x_test, y_train, y_test = train_test_split(
                     x, y, random_state=self.random_state, stratify=y
                 )

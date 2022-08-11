@@ -91,7 +91,7 @@ def load_blackbox_data(bbdatadict):
             assert y_attack is None  # check you don't have both keys
             y_attack = loaded[k]
             print(f"\t[INFO] y_attack loaded with key {k}: {y_attack.shape=}")
-    if (x_attack is None) or (y_attack) is None:
+    if (x_attack is None) or (y_attack is None):
         print("[ERROR] Couldn't find x_attack or y_attack")
         exit(0)
     print(f"[INFO] Data correctly loaded from {bb_data_path}")
@@ -131,6 +131,10 @@ def load_experiment_settings(expdict):
     return expdata
 
 
+def attack_pipeline(bb_dict, bb_data):
+    pass
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run a mlem experiment contained in a yaml file.")
     parser.add_argument("expfile", help="the YAML file containing the experiment specifications")
@@ -140,6 +144,7 @@ def main():
     BLACK_BOX = load_blackbox(yml["black_box"])
     BLACK_BOX_DATA = load_blackbox_data(yml['black_box']['data'])
     EXPERIMENT_DATA = load_experiment_settings(yml['experiment'])
+    print(EXPERIMENT_DATA)
 
     # copying the yml file in the experiment results folder so to have a description of the experiment contained in the
     # folder
@@ -147,7 +152,7 @@ def main():
         with open(args.expfile, "r") as g:
             f.write(g.read())
         print("[INFO] Saved copy of experiment file")
-    print(EXPERIMENT_DATA)
+    attack_pipeline(BLACK_BOX, BLACK_BOX_DATA)
 
 
 if __name__ == '__main__':

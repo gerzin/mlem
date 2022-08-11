@@ -508,28 +508,15 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     return final_elems.drop(target_column_name, axis=1).to_numpy()
 
 
-def oversample(x, y, categorical_mask, random_state=123):
+def oversample(x, y, categorical_mask=None, sampling_strategy="minority", random_state=123):
     """
     https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
     """
     nelems = len(y)
     assert len(x) == nelems
 
-    # print(f"{categorical_mask=}")
-
-    sampling_strategy = "minority"
-
-    # uniqcls = np.unique(y)
-    # {class: %}
-    # classes_perc = {}
-    # for c in uniqcls:
-    #    perc = sum([x == c for x in y]) / len(y)
-    #    classes_perc[c] = perc
-    # class of min. percentage
-    # minority_class_value = min(classes_perc.values())
-    # minority_classes = [c for c, v in classes_perc.items() if v == minority_class_value]
-
-    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, random_state=random_state) if any(
+    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy,
+                          random_state=random_state) if (categorical_mask is not None) and any(
         categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, random_state=random_state)
     # print(f"{x.shape=}\n{y.shape=}")
     X_new, y_new = oversampler.fit_resample(x, y)

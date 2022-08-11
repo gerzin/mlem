@@ -193,6 +193,7 @@ def perform_attack_pipeline(
             y_attack = local_model.predict(x_attack)
             d_0, d_1 = get_labels_distr(y_attack)
             print(f"[INFO] Generated stat. attack dataset of size {len(y_attack)} | label dis {d_0:.2f}%/{d_1:.2f}%")
+            x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
         else:
             x_attack = x_neigh
             y_attack = y_neigh
