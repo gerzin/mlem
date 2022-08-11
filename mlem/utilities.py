@@ -508,16 +508,17 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     return final_elems.drop(target_column_name, axis=1).to_numpy()
 
 
-def oversample(x, y, categorical_mask=None, sampling_strategy="minority", random_state=123):
+def oversample(x, y, categorical_mask=None, sampling_strategy="minority", k_neigh=4, random_state=123):
     """
     https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
     """
     nelems = len(y)
     assert len(x) == nelems
 
-    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy,
+    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
                           random_state=random_state) if (categorical_mask is not None) and any(
-        categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, random_state=random_state)
+        categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
+                                     random_state=random_state)
     # print(f"{x.shape=}\n{y.shape=}")
     X_new, y_new = oversampler.fit_resample(x, y)
 
