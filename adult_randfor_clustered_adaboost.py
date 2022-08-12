@@ -178,11 +178,27 @@ def main(
     os.makedirs(results_path, exist_ok=True)
     echo("Output folder correctly created")
 
+    ADULT_CATEGORICAL_FEATURES_MASK = [False,
+                                       True,
+                                       False,
+                                       True,
+                                       False,
+                                       True,
+                                       True,
+                                       True,
+                                       True,
+                                       True,
+                                       False,
+                                       False,
+                                       False,
+                                       True]
+    ADULT_CATEGORICAL_FEATURES_INDICES = [i for (i, el) in enumerate(ADULT_CATEGORICAL_FEATURES_MASK) if el]
     # Local explainer
     explainer = None
     if explainer_type == ExplainerType.LIME:
         print("Using LimeTabularExplainer")
-        explainer = LimeTabularExplainer(x_train, random_state=random_state)
+        explainer = LimeTabularExplainer(x_train, categorical_features=ADULT_CATEGORICAL_FEATURES_INDICES,
+                                         random_state=random_state)
         if lore_dts_path is not None:
             print("ERROR: you passed a lore decision tree to LIME")
             exit(1)
@@ -217,20 +233,7 @@ def main(
     else:
         assert type(n_rows) is int
         echo(f"Starting MIA for {n_rows} row{'s' if n_rows != 1 else ''}. Tot rows = {len(x_test_clustered)}")
-    ADULT_CATEGORICAL_FEATURES_MASK = [False,
-                                       True,
-                                       False,
-                                       True,
-                                       False,
-                                       True,
-                                       True,
-                                       True,
-                                       True,
-                                       True,
-                                       False,
-                                       False,
-                                       False,
-                                       True]
+
     echo(f"Starting Parallel with {n_jobs=} and {batch_size=} using AdaBoost")
     with Parallel(n_jobs=n_jobs, prefer="processes", batch_size=batch_size) as parallel:
         # For each row of the matrix perform the MIA
