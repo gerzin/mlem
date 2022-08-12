@@ -52,6 +52,11 @@ class HardVotingClassifier:
         self.nclass = len(classifiers)
         assert all([x.classes_ == self.classifiers_[0].classes_] for x in self.classifiers_)
 
+    def __eq__(self, other):
+        nc = self.nclass == other.nclass
+        same_length = len(self.classifiers_) == len(other.classifiers_)
+        return nc and same_length and all([x == y for (x, y) in zip(self.classifiers_, other.classifiers_)])
+
     def predict(self, x):
         """
             Use the classification of the classifiers to classify the elements. The output label is
