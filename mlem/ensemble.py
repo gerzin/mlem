@@ -10,14 +10,14 @@ from sklearn.base import RegressorMixin
 class EnsembleClassifier:
     """Ensemble of regressors managed as a unique classifier."""
 
-    def __init__(self, regressors: Sequence[RegressorMixin]):
-        """Creates a new ensemble classifier based on
+    def __init__(self, classifiers: Sequence[RegressorMixin]):
+        """Creates a new ensemble classifier.
 
         Args:
-            regressors (Sequence[RegressorMixin]): Regressors that output the probability of
+            classifiers (Sequence[RegressorMixin]): Regressors that output the probability of
             a certain item to be in a certain class.
         """
-        self.regressors = regressors
+        self.regressors = classifiers
 
     def predict(self, x: ndarray) -> ndarray:
         """Predicts a new item based on new data.
@@ -70,7 +70,7 @@ class HardVotingClassifier:
         """
 
         # use 1 for "in", -1 for "out", sum all the arrays and replace the values => 0 with in
-        # the ones < 0 with out, return a boolean mask to indicate the ones where there was a 50/50
+        # the ones < 0 with "out", return a boolean mask to indicate the ones where there was a 50/50
         # decision (only for when the number of classifiers is even)
         def convert_to_number(x):
             if x == "in":
@@ -124,10 +124,62 @@ class SoftVotingClassifier:
             array with the classification
         """
 
-        def extract_class_from_proba(x):
-            am = np.argmax(x)
+        def extract_class_from_proba(k):
+            am = np.argmax(k)
             return self.classes_[am]
 
         predictions_prob = [model.predict_proba(x) for model in self.classifiers_]
         predictions_prob_sum = sum(predictions_prob)
-        return np.apply_along_axis(extract_class_from_proba, 1, predictions_prob_sum)
+        return np.array([extract_class_from_proba(x) for x in predictions_prob_sum])
+
+
+class KMostSureVotingClassifier:
+    """
+        Soft voting classifier which sums the probabilities predicted by the k most sure
+        classifiers and returns the class with the highest value.
+    """
+
+    def __init__(self, classifiers: List, k=5):
+        """
+
+        Args:
+            classifiers:
+        """
+        self.classifiers_ = classifiers
+        self.nclass = len(classifiers)
+        self.classes_ = self.classifiers_[0].classes_
+        self.k = k
+        assert all([x.classes_ == self.classifiers_[0].classes_] for x in self.classifiers_)
+        if k > len(classifiers):
+            raise ValueError("k cannot be more than the number of classifiers")
+
+    def predict(self, x):
+        """
+        Use the predicted probabilities of the k most sure classifiers to predict the most probable class.
+
+        Args:
+            x: elements to classify
+
+        Returns:
+            array with the classification
+        """
+
+        def extract_class_from_proba(k):
+            am = np.argmax(k)
+            return self.classes_[am]
+
+        def extract_and_sum_k_most_sure(predictions_list, k):
+            final_list = []
+            for row in range(len(predictions_list[0])):
+                preds_row = [el[row] for el in predictions_list]
+                # sort by the max value of each tuple, in reverse order
+                preds_row.sort(key=lambda x: np.max(x), reverse=True)
+                # extract the first k elements
+                final_list.append(preds_row[:k])
+            # creates an array in wich each row contains the sum
+            # of the predictions of the k most probable classifiers for that row
+            return np.array([sum(x) for x in final_list])
+
+        predictions_prob = [model.predict_proba(x) for model in self.classifiers_]
+        predictions_prob_sum = extract_and_sum_k_most_sure(predictions_prob, self.k)
+        return np.array([extract_class_from_proba(x) for x in predictions_prob_sum])
