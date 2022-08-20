@@ -37,7 +37,7 @@ def evaluate_attack(train_set, test_set, atk0, atk1, black_box, atk_title: str, 
         atk0.predict(test_preds_0),
         atk1.predict(test_preds_1)
     ])
-
+    print(f"{attack_preds_out=}")
     print(
         f'#even = {len([x for x in attack_preds_in if x == "even"])} IN - {len([x for x in attack_preds_out if x == "even"])} OUT')
 
@@ -46,10 +46,11 @@ def evaluate_attack(train_set, test_set, atk0, atk1, black_box, atk_title: str, 
 
     labels = np.concatenate([in_labels, out_labels])
     preds = np.concatenate([attack_preds_in, attack_preds_out])
+
     even_mask = preds != "even"
 
     assert len(labels) == len(preds) and len(even_mask) == len(labels)
-
+    assert set(labels) == set(['in', 'out'])
     labels = labels[even_mask]
     preds = preds[even_mask]
 

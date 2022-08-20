@@ -56,12 +56,12 @@ def get_local_model_data(index: int, base_folder):
     return loaded
 
 
-def create_ensembles(base_folder, ensemble_class):
+def create_ensembles(base_folder, ensemble_class, verbose=False):
     """
 
     Args:
-        base_folder: path to the folder containing the subfolders
-        ensemble_class:
+        base_folder: path to the folder containing the subfolders'
+        ensemble_class: HardVotingClassifier or SoftVotingClassifier
 
     Returns:
         (ensemble0, ensemble1): ensemble for the label 0 and 1
@@ -69,8 +69,10 @@ def create_ensembles(base_folder, ensemble_class):
     ATTACK_0, ATTACK_1 = [], []
     indices = [int(i.stem) for i in Path(base_folder).iterdir() if i.is_dir() and i.stem.isdigit()]
     indices.sort()
-
     assert len(indices) > 0
+
+    if verbose:
+        print(f"Loaded {len(indices)} rows")
 
     for index in indices:
         atk0, atk1 = get_attack_mod(index, base_folder)
