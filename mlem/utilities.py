@@ -1,5 +1,6 @@
 import bz2
 import pickle
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union, Iterable, Callable
 import numpy as np
@@ -508,21 +509,61 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     return final_elems.drop(target_column_name, axis=1).to_numpy()
 
 
-def oversample(x, y, categorical_mask=None, sampling_strategy="minority", k_neigh=4, random_state=123):
+def oversample(x, y, categorical_mask=None, sampling_strategy="minority", k_neigh=4, random_state=123,
+               retry_kneigh=True):
     """
     https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
+
+    Args:
+        x:
+        y:
+        categorical_mask: boolean list indicating, for every feature, if it is categorical or not.
+            If None SMOTE is called instead of SMOTENC
+        sampling_strategy:
+        k_neigh:
+        random_state:
+        retry_kneigh: in case of failure due to the value of k_neigh, retries the
+                      oversampling with the highest possible value of k_neigh
+
+    Returns:
+
     """
     nelems = len(y)
-    assert len(x) == nelems
+    assert len(x) == nelems and k_neigh > 0
 
-    oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
-                          random_state=random_state) if (categorical_mask is not None) and any(
-        categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
-                                     random_state=random_state)
-    # print(f"{x.shape=}\n{y.shape=}")
-    X_new, y_new = oversampler.fit_resample(x, y)
+    try:
+        oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
+                              random_state=random_state) if (categorical_mask is not None) and any(
+            categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, k_neighbors=k_neigh,
+                                         random_state=random_state)
+        # print(f"{x.shape=}\n{y.shape=}")
+        X_new, y_new = oversampler.fit_resample(x, y)
 
-    return X_new, y_new
+        return X_new, y_new
+    except ValueError as e:
+        if retry_kneigh and "Expected n_neighbors <= n_samples" in str(e):
+            search_group = re.search('n_samples.=.[0-9]+', str(e)).group()
+            extracted_number = ""
+            if search_group is None:
+                raise e
+            else:
+                for c in reversed(search_group):
+                    if c.isdigit():
+                        extracted_number = c + extracted_number
+                    else:
+                        break
+
+            number_neighbors = int(extracted_number) - 1
+            print(f"[INFO OVERSAMPLE] Retrying with k_neighbors={number_neighbors}")
+            oversampler = SMOTENC(categorical_mask, sampling_strategy=sampling_strategy, k_neighbors=number_neighbors,
+                                  random_state=random_state) if (categorical_mask is not None) and any(
+                categorical_mask) else SMOTE(sampling_strategy=sampling_strategy, k_neighbors=number_neighbors,
+                                             random_state=random_state)
+            # print(f"{x.shape=}\n{y.shape=}")
+            X_new, y_new = oversampler.fit_resample(x, y)
+            return X_new, y_new
+        else:
+            raise e
 
 
 def get_labels_distr(y):
