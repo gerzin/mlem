@@ -565,6 +565,7 @@ def oversample(x, y, categorical_mask=None, sampling_strategy=0.4 / 0.6, k_neigh
         elif "The specified ratio required to remove samples from the minority class while trying to generate new samples" in str(
                 e):
             print(f"[INFO OVERSAMPLE] Specified ratio too low: skipping oversampling")
+            return x, y
         else:
             raise e
 
