@@ -111,6 +111,52 @@ class MLEMAbstractClassifier:
         return loaded
 
 
+class MLEMPytorchLinearClassifier(MLEMAbstractClassifier):
+
+    @property
+    def model(self):
+        pass
+
+    def fit(self, x, y, *args, **kwargs):
+        pass
+
+    def predict(self, x: np.ndarray, *args, **kwargs) -> Any:
+        pass
+
+    def predict_proba(self, x: np.ndarray) -> np.ndarray:
+        pass
+
+    def save(self, path, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls, path, *args, **kwargs):
+        pass
+
+
+class MLEMPytorchBinaryClassifier(MLEMAbstractClassifier):
+
+    @property
+    def model(self):
+        pass
+
+    def fit(self, x, y, *args, **kwargs):
+        pass
+
+    def predict(self, x: np.ndarray, *args, **kwargs) -> Any:
+        pass
+
+    def predict_proba(self, x: np.ndarray) -> np.ndarray:
+        pass
+
+    def save(self, path, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls, path, *args, **kwargs):
+        pass
+
+
 class MLEMRandomForestClassifier(MLEMAbstractClassifier):
 
     def __init__(self, *args, **kwargs):

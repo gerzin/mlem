@@ -93,7 +93,7 @@ def __get_local_data(
         num_features=len(x),
     )
     # Local model is the one pointed by the instance
-    local_model = EnsembleClassifier(regressors=models)
+    local_model = EnsembleClassifier(classifiers=models)
     # Generates predictions for the neighborhood
     y_neigh: ndarray = local_model.predict(x_neigh)
     return local_model, x_neigh, y_neigh

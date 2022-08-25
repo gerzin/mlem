@@ -28,6 +28,26 @@ def get_attack_mod(index: int, base_folder, targets=[0, 1]):
     return loaded_models
 
 
+def get_attack_model_data(index: int, base_folder, targets=[0, 1]):
+    """
+    Load the attack models data. The returned objects have the keys (x_train x_test y_train y_test)
+    Args:
+        index: row of the dataset on which the attack model was built
+        base_folder: path up to the index
+        targets (int | List(int)) - targets for the attack model.
+    Returns:
+        List containing the attack models' data for that particular index (label0, label1)
+    """
+    if type(targets) is int:
+        targets = [targets]
+    loaded_data = []
+    for t in targets:
+        path = Path(base_folder) / f"{index}" / "attack" / f"{t}" / "data.npz"
+        data = np.load(path, allow_pickle=True)
+        loaded_data.append(data)
+    return loaded_data
+
+
 def get_local_model(index: int, base_folder):
     """
     Get the local model built on a row.
@@ -83,3 +103,41 @@ def create_ensembles(base_folder, ensemble_class, verbose=False):
     ensemble_1 = ensemble_class(classifiers=ATTACK_1)
 
     return ensemble_0, ensemble_1
+
+
+def create_ensamble_attack_dataset(base_folder, kind):
+    """
+
+    Returns:
+        (Features0, label0), (Features1, label1) - The feature and labels for the attack models trained to predict membership on label 0 and 1
+
+    """
+    assert kind.lower() in ("train", "test")
+
+    indices = [int(i.stem) for i in Path(base_folder).iterdir() if i.is_dir() and i.stem.isdigit()]
+    indices.sort()
+    assert len(indices) > 0
+
+    DATA_0_X = []
+    DATA_0_Y = []
+    DATA_1_X = []
+    DATA_1_Y = []
+
+    key_x = f"x_{kind}"
+    key_y = f"y_{kind}"
+
+    for index in indices:
+        data0, data1 = get_attack_model_data(index, base_folder)
+
+        DATA_0_X.append(data0[key_x])
+        DATA_0_Y.append(data0[key_y])
+
+        DATA_1_X.append(data1[key_x])
+        DATA_1_Y.append(data1[key_y])
+
+    X_0 = np.concatenate(DATA_0_X)
+    Y_0 = np.concatenate(DATA_0_Y)
+    X_1 = np.concatenate(DATA_1_X)
+    Y_1 = np.concatenate(DATA_1_Y)
+
+    return (X_0, Y_0), (X_1, Y_1)
