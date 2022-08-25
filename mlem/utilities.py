@@ -509,7 +509,7 @@ def create_attack_dataset_from_lime_centroids(lime_x, lime_y, noisy_set, black_b
     return final_elems.drop(target_column_name, axis=1).to_numpy()
 
 
-def oversample(x, y, categorical_mask=None, sampling_strategy="minority", k_neigh=4, random_state=123,
+def oversample(x, y, categorical_mask=None, sampling_strategy=0.4 / 0.6, k_neigh=4, random_state=123,
                retry_kneigh=True):
     """
     https://machinelearningmastery.com/smote-oversampling-for-imbalanced-classification/
@@ -519,7 +519,7 @@ def oversample(x, y, categorical_mask=None, sampling_strategy="minority", k_neig
         y:
         categorical_mask: boolean list indicating, for every feature, if it is categorical or not.
             If None SMOTE is called instead of SMOTENC
-        sampling_strategy:
+        sampling_strategy: SMOTE sampling strategy
         k_neigh:
         random_state:
         retry_kneigh: in case of failure due to the value of k_neigh, retries the
