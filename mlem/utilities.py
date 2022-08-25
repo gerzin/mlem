@@ -562,6 +562,9 @@ def oversample(x, y, categorical_mask=None, sampling_strategy=0.4 / 0.6, k_neigh
             # print(f"{x.shape=}\n{y.shape=}")
             X_new, y_new = oversampler.fit_resample(x, y)
             return X_new, y_new
+        elif "The specified ratio required to remove samples from the minority class while trying to generate new samples" in str(
+                e):
+            print(f"[INFO OVERSAMPLE] Specified ratio too low: skipping oversampling")
         else:
             raise e
 
