@@ -62,3 +62,7 @@ def evaluate_attack(train_set, test_set, atk0, atk1, black_box, atk_title: str, 
         ax.set_title(atk_title)
     else:
         plt.title(atk_title)
+
+
+def evaluate_attack_model(train_set, test_set, attack_model):
+    pass
