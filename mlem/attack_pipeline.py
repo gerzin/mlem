@@ -178,13 +178,15 @@ def perform_attack_pipeline(
     y_attack: ndarray = None
     # TODO: CAMBIARE DOPO
     local_model = black_box
+
     if local_attack_dataset is not None:
         x_attack = local_attack_dataset
         # y_attack = local_model.predict(x_attack)
         # TODO: CAMBIARE DOPO
         # x_attack = create_attack_dataset_from_lime_centroids(x_neigh, y_neigh, x_attack, black_box, categorical_mask)
         y_attack = local_model.predict(x_attack)
-        x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
+        # TODO: CAMBIARE DOPO
+        # x_attack, y_attack = oversample(x_attack, y_attack, categorical_mask)
         d_0, d_1 = get_labels_distr(y_attack)
         print(
             f"[INFO] Generated oversampled attack dataset of size {len(y_attack)} with Black Box instead of local_model | label dis after oversampling {d_0:.2f}%/{d_1:.2f}%")
