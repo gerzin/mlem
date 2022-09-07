@@ -22,7 +22,8 @@ import scipy.spatial.distance as distance
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 from imblearn.over_sampling import SMOTENC, SMOTE
 from sklearn.mixture import GaussianMixture
-from black_box import KerasBlackBoxBin
+
+from mlem.black_box import KerasBlackBoxBin
 
 
 def negate(x):
