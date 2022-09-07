@@ -22,6 +22,33 @@ import scipy.spatial.distance as distance
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 from imblearn.over_sampling import SMOTENC, SMOTE
 from sklearn.mixture import GaussianMixture
+from black_box import KerasBlackBoxBin
+
+
+def negate(x):
+    """
+    Negates a boolean list
+
+    Args:
+        x: list containing boolean values
+
+    Returns:
+        list with the values in x negated
+    """
+    return [not i for i in x]
+
+
+def norm_nocategorical(vector, categorical_mask):
+    """
+    Compute the norm of a vector excluding the categorical features
+    Args:
+        vector: vector of which to compute the norm
+        categorical_mask: boolean mask indicating if a feature is categorical or not
+
+    Returns:
+        norm of the vector considering only the numerical features
+    """
+    return np.linalg.norm(vector[negate(categorical_mask)])
 
 
 def save_pickle_bz2(path: str, object: Any):
@@ -175,6 +202,28 @@ def create_adaboost(x_train: ndarray,
         clf = RandomizedSearchCV(ab, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
     clf.fit(x_train, y_train)
     return clf.best_estimator_
+
+
+def create_nn_model_keras(x, y, wrap=True):
+    try:
+        import tensorflow as tf
+        import tensorflow.keras as keras
+        from tensorflow.keras import layers
+    except Exception as e:
+        print("Error importing Tensorflow")
+        raise e
+    n_inp_feat = x.shape[1]
+    model = keras.Sequential([
+        layers.Input(shape=(n_inp_feat,)),
+        layers.Dense(32, activation='relu'),
+        layers.Dense(16, activation='relu'),
+        layers.Dense(8, activation='relu'),
+        layers.Dense(1, activation='sigmoid')
+    ])
+    # model.compile(loss='binary_crossentropy', optimizer='adam', metrics=[rec])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.fit(x=x, y=y, epochs=20, validation_split=0.1)
+    return KerasBlackBoxBin(model) if wrap else model
 
 
 def __create_local_attack_dataset(
