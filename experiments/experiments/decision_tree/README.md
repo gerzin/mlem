@@ -7,3 +7,7 @@ Folders structure:
 * `noisy_dataset` contains the experiments where the noisy "validation" dataset is used for the creation of the shadow models.
 
 * `decision_tree_dataset` contains the experiments where the same dataset used to build the `Decision Tree` is used for the creation of the shadow models.
+
+* `decision_tree_dataset_no3std` contains the experiments where the same dataset used to build the `Decision Tree` is used for the creation of the shadow models but the generation isn't filtered.
+
+* `comparisons` contains the comparison between the results generated in the above folders.
