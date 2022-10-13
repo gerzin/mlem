@@ -8,7 +8,7 @@ import numpy as np
 import sys
 
 sys.path.append("../..")
-from mlem.utilities import load_pickle_bz2
+from mlem.utilities import load_pickle_bz2 # type: ignore
 
 DEFAULT_ADULT_PATH = Path(__file__).parent.parent.parent / "datasets" / "adult"
 
