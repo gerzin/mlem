@@ -3,6 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 
+def __save_txt(path, txt):
+    """Saves a text file on disk.
+
+    Args:
+        path (str | Path): Path where to save the string.
+        txt (str): String to save.
+    """
+    path = str(path)
+    with open(path, "w") as f:
+        f.write(txt)
+
+
 def evaluate_attack(atk0, atk1, black_box, black_box_data, output_folder=None):
     """_summary_
 
@@ -67,9 +79,9 @@ def evaluate_attack(atk0, atk1, black_box, black_box_data, output_folder=None):
 
 
     if output_folder:
-        save_txt(output_folder / "classification_report_full.txt", report_full)
+        __save_txt(output_folder / "classification_report_full.txt", report_full)
     
-    fig, axs = plt.subplots(ncols=3, figsize=(20,18))
+    fig, axs = plt.subplots(n_rows=1, ncols=3, figsize=(20,18))
     
     ConfusionMatrixDisplay.from_predictions(train_test.Position, train_test.Atk, cmap='inferno', ax=axs.ravel()[0])
     ConfusionMatrixDisplay.from_predictions(class0.Position, class0.Atk, cmap='inferno', ax=axs.ravel()[1])
