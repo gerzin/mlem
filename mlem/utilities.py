@@ -7,6 +7,7 @@ import numpy as np
 from numpy import ndarray, concatenate
 from pandas import concat
 from pandas.core.frame import DataFrame
+from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier
 import warnings
 from sklearn.model_selection import RandomizedSearchCV
@@ -277,6 +278,43 @@ def create_attack_dataset(
     return df_in
 
 
+# Hyperparameters of the grid search
+__HYPERPARAMETERS_DT = {
+    "criterion": ["gini", "entropy"],
+}
+
+
+def create_decision_tree(
+        x_train,
+        y_train,
+        hyperparameters=__HYPERPARAMETERS_DT,
+        n_jobs=4,
+        use_halving=True
+):
+    """Creates a decision tree classifier via grid search.
+
+    Args:
+        x_train (ndarray): Training input examples.
+        y_train (ndarray): Training target values.
+        hyperparameters (Dict[str, List[Any]], optional): Dictionary of hyperparameters for the grid search. Defaults to the fixed ones.
+        n_jobs: Number of jobs to run in parallel in the grid search. (default 4)
+        use_halving (bool): If true use the HalvingGridSearch
+
+    Returns:
+        RandomForestClassifier: Random forest classifier.
+    """
+
+    dt = tree.DecisionTreeClassifier()
+
+    if use_halving:
+        clf = HalvingGridSearchCV(dt, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
+    else:
+        clf = RandomizedSearchCV(dt, hyperparameters, refit=True, n_jobs=n_jobs, verbose=0)
+    clf.fit(x_train, y_train)
+    # print(f"GRID_SEARCH BEST PARAMS: {clf.best_params_=}")
+    return clf.best_estimator_
+
+
 def minority_class_resample(x: ndarray, y: ndarray, n_samples: int = 50) -> Tuple[ndarray, ndarray]:
     """Resamples x and y generating n_samples elements of the minority class.
 
@@ -365,6 +403,51 @@ def insert_noise_categorical(dataset: pd.DataFrame, perc: float = 0.1,
         for ind, val in zip(index_to_replace, new_values):
             dataset.iloc[ind, c] = val
     return dataset
+
+
+def generate_balanced_dataset(x, num_samples: int, black_box, generate_data_fn, filter_function=None, max_tries=30,
+                              shuffle=True):
+    """Generate a balanced dataset which satisfies the filter function.
+    Generate a balanced dataset which satisfies the filter function. If the algorithm can't generate at least num_samples
+    elements in max_tries an exception is raised.
+
+
+    Args:
+        x:
+        num_samples:
+        black_box:
+        generate_data_fn:
+        filter_function:
+        max_tries:
+        shuffle:
+
+    Returns:
+
+    """
+    final = pd.DataFrame()
+
+    for t in range(max_tries):
+        generated = pd.DataFrame(generate_data_fn(x, num_samples))
+        if filter_function:
+            generated = filter_function(generated, x, 3)
+        generated['Target'] = black_box.predict(generated.to_numpy())
+
+        zeroes = generated[generated['Target'] == 0]
+        ones = generated[generated['Target'] == 1]
+
+        # one of the two classes has not been generated, try again
+        if len(zeroes) == 0 or len(ones) == 0:
+            continue
+
+        if len(final) < num_samples:
+            # not the most efficient way but the bottleneck isn't here
+            min_len = min(len(zeroes), len(ones))
+            final = pd.concat([final, zeroes.head(min_len).copy(), ones.head(min_len).copy()])
+
+        else:
+            return final.sample(frac=1).reset_index(drop=True) if shuffle else final.reset_index(drop=True)
+
+    raise Exception(f"Could not generate balanced dataset. Generated {len(final)} / {num_samples}")
 
 
 def insert_noise_numerical(dataset: DataFrame, perc: float = 0.1,
@@ -651,7 +734,16 @@ def print_label_distr(y_tr, y_te, lab):
     print(sep)
 
 
-def stat_sample_dataset(x_train, n_samples=8000, n_components_method="gridsearch"):
+def create_gaussian_mixture(x_train):
+    tuned_parameters = {'n_components': np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]),
+                        'random_state': [123]}
+    clf = GridSearchCV(GaussianMixture(), tuned_parameters, cv=2)
+    clf.fit(x_train)
+    gm = clf.best_estimator_
+    return gm
+
+
+def stat_sample_dataset(x_train=None, n_samples=8000, mixture_model=None):
     """
     Generate a new statistical dataset using GaussianMixtures.
 
@@ -659,15 +751,17 @@ def stat_sample_dataset(x_train, n_samples=8000, n_components_method="gridsearch
     Args:
         x_train: train dataset
         n_samples: number of samples to generate
-        n_components_method: method used to determine the number of components of the GaussianMixture.
-                             For now the only supported one is gridsearch
+        mixture_model: if not None, use that model to generate tha statistical dataset, otherwise create a one-off
+                        Gaussian mixture using a grid search for the number of components.
 
     Returns:
 
     """
-    tuned_parameters = {'n_components': np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 'random_state': [123]}
-    clf = GridSearchCV(GaussianMixture(), tuned_parameters, cv=2)
-    clf.fit(x_train)
-    gm = clf.best_estimator_
-    stat_dataset = gm.sample(n_samples=n_samples)
-    return stat_dataset[0]
+    if mixture_model:
+        return mixture_model.sample(n_samples=n_samples)[0]
+    elif x_train:
+        gm = create_gaussian_mixture(x_train)
+        stat_dataset = gm.sample(n_samples=n_samples)
+        return stat_dataset[0]
+    else:
+        raise ValueError("One parameter between x_train and mixture_model must be not None")
