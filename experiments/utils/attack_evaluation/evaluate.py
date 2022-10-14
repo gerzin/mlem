@@ -15,6 +15,11 @@ def __save_txt(path, txt):
         f.write(txt)
 
 
+def __plot_confusion_matrix(y_true, y_predicted, ax):
+    ax.grid(False)
+    ConfusionMatrixDisplay.from_predictions(y_true, y_predicted, cmap='inferno', ax=ax, colorbar=False)
+
+
 def evaluate_attack(atk0, atk1, black_box, black_box_data, output_folder=None, split_true_label=False):
     """_summary_
 
@@ -82,10 +87,12 @@ def evaluate_attack(atk0, atk1, black_box, black_box_data, output_folder=None, s
         __save_txt(output_folder / "classification_report_full.txt", report_full)
     
     fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(20,18))
+
+    axs_rav = axs.ravel()
     
-    ConfusionMatrixDisplay.from_predictions(train_test.Position, train_test.Atk, cmap='inferno', ax=axs.ravel()[0])
-    ConfusionMatrixDisplay.from_predictions(class0.Position, class0.Atk, cmap='inferno', ax=axs.ravel()[1])
-    ConfusionMatrixDisplay.from_predictions(class1.Position, class1.Atk, cmap='inferno', ax=axs.ravel()[2])
+    __plot_confusion_matrix(train_test.Position, train_test.Atk, ax=axs_rav[0])
+    __plot_confusion_matrix(class0.Position, class0.Atk, ax=axs_rav[1])
+    __plot_confusion_matrix(class1.Position, class1.Atk, ax=axs_rav[2])
 
     axs[0].set_title("Full")
     axs[1].set_title("Class 0")
