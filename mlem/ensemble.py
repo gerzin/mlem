@@ -5,6 +5,8 @@ from numpy import ndarray
 from numpy.core.fromnumeric import argmax
 from numpy.core.shape_base import vstack
 from sklearn.base import RegressorMixin
+import scipy.spatial.distance as distance
+from collections import Counter
 
 
 class EnsembleClassifier:
@@ -183,3 +185,47 @@ class KMostSureVotingClassifier:
         predictions_prob = [model.predict_proba(x) for model in self.classifiers_]
         predictions_prob_sum = extract_and_sum_k_most_sure(predictions_prob, self.k)
         return np.array([extract_class_from_proba(x) for x in predictions_prob_sum])
+
+
+def _hard_vote_instance(x, models):
+    predictions = [mod.predict(x)[0] for mod in models]
+    return Counter(predictions).most_common(1)[0][0]
+
+
+class KClosestVotingClassifier:
+    """
+    For each point to classify use the k closest classifiers.
+    """
+
+    def __init__(self, classifiers: List, positions: List, k=5, mode="hard"):
+        self.classifiers_ = classifiers
+        self.instances_ = positions
+        self.k_ = k
+        if not (mode.lower() in ("hard")):
+            raise ValueError(f"mode {mode} not supported")
+        self.mode_ = mode
+
+    def _find_k_closest(self, x):
+        """
+        Find the k classifiers closest to x
+        Args:
+            x:
+
+        Returns:
+            List of classifiers
+        """
+        closest = []
+        # find the distances between x and the instances used to generate the classifiers
+        distances = distance.cdist(self.instances_, [x], metric="euclidean")
+        # find the indices of the k minimum values
+        min_ind = np.argpartition(distances.ravel(), self.k_)[:self.k_]
+        for i in min_ind:
+            closest.append(self.classifiers_[i])
+        return closest
+
+    def predict(self, x):
+        if self.mode_ == 'hard':
+            def classify_row(elem):
+                return _hard_vote_instance(elem, self._find_k_closest(elem))
+
+            return np.array([classify_row(r) for r in x])
