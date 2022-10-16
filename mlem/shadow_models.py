@@ -88,8 +88,9 @@ class ShadowModelsManager:
         for i in range(self.__n_models):
             # Train-test splitting
             x_train, x_test, y_train, y_test = train_test_split(
-                x, y, test_size=self.test_size, stratify=y, train_size=0.6
+                x, y, test_size=self.test_size, stratify=y
             )
+
             # Oversampling of the minority classes
 
             # smote requires a minimum of samples for each class
@@ -102,17 +103,16 @@ class ShadowModelsManager:
             # SMOTE oversampling
             x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
 
-            # Random Forest obtained via grid search
-            # TODO split classifier creation from grid search (also change names since now it can also be adaboost)
-            rf: RandomForestClassifier = self.model_creator(x_train, y_train)
+            # Classifier obtained via grid search
+            classifier = self.model_creator(x_train, y_train)
 
             # Predictions of the shadow model on the train and test set
 
-            y_pred_train: ndarray = rf.predict(x_train)
-            y_prob_train: ndarray = rf.predict_proba(x_train)
+            y_pred_train: ndarray = classifier.predict(x_train)
+            y_prob_train: ndarray = classifier.predict_proba(x_train)
 
-            y_pred_test: ndarray = rf.predict(x_test)
-            y_prob_test: ndarray = rf.predict_proba(x_test)
+            y_pred_test: ndarray = classifier.predict(x_test)
+            y_prob_test: ndarray = classifier.predict_proba(x_test)
 
             # Classification reports
             report_train: str = classification_report(y_train, y_pred_train)
@@ -141,7 +141,7 @@ class ShadowModelsManager:
                 y_test=y_test,
             )
             # Saves the shadow model
-            save_pickle_bz2(f"{path}/model.pkl.bz2", rf)
+            save_pickle_bz2(f"{path}/model.pkl.bz2", classifier)
 
         # Concatenates the attack datasets
         self.attack_dataset: DataFrame = concat(attack_datasets)

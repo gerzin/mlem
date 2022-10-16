@@ -6,6 +6,7 @@ from numpy import array, ndarray
 from torch import tensor, float32, no_grad, argmax
 from torch.nn import Module
 from sklearn.base import ClassifierMixin
+import numpy as np
 import torch
 
 
@@ -42,13 +43,15 @@ class BlackBox(ABC):
 class PyTorchBlackBox(BlackBox):
     """Wrapper for a PyTorch black box classifier."""
 
-    def __init__(self, model: Module) -> None:
+    def __init__(self, model: Module, activation=None) -> None:
         """
         Args:
             model: model to wrap.
+            activation: Activation function to call. If it's integrated into the model use none.
         """
         self.model = model
         self.device = next(model.parameters()).device
+        self.activation = activation
 
     def predict(self, x: ndarray) -> ndarray:
         """
@@ -65,6 +68,8 @@ class PyTorchBlackBox(BlackBox):
         X_tensor = tensor(x, dtype=float32, device=self.device)
         with no_grad():
             output = self.model(X_tensor)
+            if self.activation:
+                output = self.activation(output)
             y_pred = argmax(output, dim=1)
         return array(y_pred.cpu())
 
@@ -80,7 +85,10 @@ class PyTorchBlackBox(BlackBox):
         self.model.eval()
         X_tensor = tensor(x, dtype=float32, device=self.device)
         with no_grad():
-            y_prob = self.model(X_tensor)
+            if self.activation:
+                y_prob = self.activation(self.model(X_tensor))
+            else:
+                y_prob = self.model(X_tensor)
         return array(y_prob.cpu())
 
 
@@ -95,3 +103,17 @@ class SklearnBlackBox(BlackBox):
 
     def predict_proba(self, x: ndarray) -> ndarray:
         return self.model.predict_proba(x)
+
+
+class KerasBlackBoxBin:
+    """Wrapper for a keras black box for binary classification."""
+
+    def __init__(self, model) -> None:
+        self.model = model
+
+    def predict(self, x):
+        return self.model.predict(x).round().ravel()
+
+    def predict_proba(self, x):
+        p = self.model.predict(x)
+        return np.column_stack((1 - p, p))
