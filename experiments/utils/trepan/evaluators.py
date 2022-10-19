@@ -8,8 +8,6 @@ from abc import abstractmethod
 import numpy as np
 from scipy.spatial.distance import hamming
 
-from logzero import logger
-
 from .models import Rule
 
 
@@ -512,7 +510,6 @@ class MemEvaluator(Evaluator):
             model_complexity = np.mean([len(r) / m for r in rules])
             model_bic = - (fidelity_weight * log_likelihood - complexity_weight * model_complexity / n)
 
-            logger.debug('Log likelihood: ' + str(log_likelihood) + ' | Complexity: ' + str(model_complexity))
 
             self.bics[tuple(rules)] = model_bic
 

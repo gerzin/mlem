@@ -9,9 +9,8 @@ from torch import tensor, from_numpy
 from numpy.random import choice, random
 from sklearn.neighbors import KernelDensity
 
-from evaluators import MemEvaluator
+from .evaluators import MemEvaluator
 
-from logzero import logger
 
 class MyDataset(Dataset):
     def __init__(self, xy):
@@ -202,7 +201,7 @@ class TrePanGenerator(Generator):
 
         while not (output_mean - eps <= samples_output_mean <= output_mean + eps) and budget > 0:
             if budget % budget_bucket == 0:
-                logger.debug('Budget ' + str(budget) + '/' + str(generation_budget) + '...')
+                pass
             budget -= 1
             # Generate random samples in over
             samples = random((10 * size, len(distributions)))
