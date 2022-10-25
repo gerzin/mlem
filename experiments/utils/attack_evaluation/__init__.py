@@ -1,1 +1,1 @@
-from .evaluate import evaluate_attack
+from .evaluate import evaluate_attack, evaluate_attack_distances
