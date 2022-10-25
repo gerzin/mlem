@@ -223,9 +223,13 @@ class KClosestVotingClassifier:
             closest.append(self.classifiers_[i])
         return closest
 
-    def predict(self, x):
-        if self.mode_ == 'hard':
-            def classify_row(elem):
-                return _hard_vote_instance(elem, self._find_k_closest(elem))
+    def predict(self, x, inst):
 
-            return np.array([classify_row(r) for r in x])
+        if len(x) != len(inst):
+            raise ValueError(f'x and inst must have the same length. Got {len(x)=} {len(inst)=}')
+
+        if self.mode_ == 'hard':
+            def classify_row(elem, i):
+                return _hard_vote_instance(elem, self._find_k_closest(i))
+
+            return np.array([classify_row(r, inst_) for r, inst_ in zip(x, inst)])
