@@ -188,7 +188,7 @@ class KMostSureVotingClassifier:
 
 
 def _hard_vote_instance(x, models):
-    predictions = [mod.predict(x)[0] for mod in models]
+    predictions = [mod.predict([x])[0] for mod in models]
     return Counter(predictions).most_common(1)[0][0]
 
 
