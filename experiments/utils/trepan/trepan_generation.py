@@ -140,7 +140,7 @@ class TrePanGenerator(Generator):
         return filtered_samples
 
     def __generate_sample(self, records, distributions, types, populations, oracle, size, rules=None,
-                          generation_budget=10000, eps=.1, output_mean=0.5):
+                          generation_budget=10000, eps=.1, output_mean=0.6):
         """
             Generate a sample for `records`.
 
@@ -152,7 +152,7 @@ class TrePanGenerator(Generator):
                 oracle (Estimator): Oracle with 'predict' method.
                 size (int): The neighborhood size.
                 rules (list): List of rules to filter the sample.
-                generation_budget (int): Maximum generation tries. Defaults to 1000.
+                generation_budget (int): Maximum generation tries. Defaults to 10000.
                 eps (float): Tolerance for sampling. Defaults to 0.1
                 output_mean (float): Defaults to 0.5.
 
@@ -269,6 +269,7 @@ class TrePanGenerator(Generator):
         populations = []
         for f in range(records.shape[1]):
             if types[f] == 'continuous':
+                # TODO: controllare parametri
                 kd_estimator = KernelDensity(bandwidth=0.04, kernel='gaussian', algorithm='ball_tree')
                 kd_estimator.fit(records[:, f].reshape(-1, 1))
                 distributions.append(kd_estimator)
