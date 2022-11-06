@@ -166,3 +166,6 @@ cython_debug/
 
 # folder with the ouptut op the experiments
 experiment_output
+
+# ignore the big datasets containing the CFS points
+.json
