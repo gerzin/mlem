@@ -168,4 +168,5 @@ cython_debug/
 experiment_output
 
 # ignore the big datasets containing the CFS points
-.json
+./experiments/experiments/decision_tree/CFS/adult/adultRF_CFS.json
+./experiments/experiments/decision_tree/CFS/diva/divaRF_RF_cfs_novembre.json
