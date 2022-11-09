@@ -13,7 +13,7 @@ from mlem.utilities import (
     create_attack_dataset,
     create_random_forest,
     save_pickle_bz2,
-    save_txt, frequencies, minority_class_resample,
+    save_txt, frequencies, minority_class_resample, oversample,
 )
 
 import logging
@@ -49,7 +49,7 @@ class ShadowModelsManager:
         # logger.debug(f"RESULTS PATH CREATED: {results_path}")
 
         categorical_mask = kwargs.get("categorical_mask", None)
-
+        self.categorical_mask = categorical_mask
         # SMOTE oversampler
         self.oversampler = SMOTENC(categorical_mask, sampling_strategy="minority",
                                    random_state=random_state) if (categorical_mask is not None) and any(
@@ -101,7 +101,9 @@ class ShadowModelsManager:
             #    min_freq = min(frequencies(y_train), key=lambda el: el[1])
 
             # SMOTE oversampling
-            x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
+
+            # x_train, y_train = self.oversampler.fit_resample(x_train, y_train)
+            x_train, y_train = oversample(x_train, y_train, self.categorical_mask)
 
             # Classifier obtained via grid search
             classifier = self.model_creator(x_train, y_train)
